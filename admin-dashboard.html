@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>داش بورد استديو التصوير</title>
+  </head>
+  <body>
+    <header>
+      <h1>📸 استديو التصوير — لوحة التحكم</h1>
+      <button id="logout-btn" style="display: none">تسجيل خروج</button>
+    </header>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-screen">
+      <h2>تسجيل الدخول</h2>
+      <div id="error-msg"></div>
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="login-email" placeholder="example@mail.com" />
+      <label>كلمة المرور</label>
+      <input type="password" id="login-pass" placeholder="••••••••" />
+      <button class="primary" id="login-btn">دخول</button>
+    </div>
+
+    <!-- الداش بورد -->
+    <main id="dashboard">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="works">آخر الأعمال</button>
+        <button class="tab-btn" data-tab="news">آخر الأخبار</button>
+      </div>
+
+      <!-- تبويب آخر الأعمال -->
+      <div class="panel active" id="panel-works">
+        <div class="card">
+          <h3>إضافة عمل جديد</h3>
+          <form id="form-works">
+            <label>الصورة (إلزامي)</label>
+            <input type="file" id="works-file" accept="image/*" required />
+            <img id="works-preview" alt="معاينة" />
+            <div class="upload-status" id="works-upload-status"></div>
+
+            <label>التصنيف</label>
+            <div class="cat-row" style="margin-bottom: 12px">
+              <select id="works-category" required></select>
+              <input type="text" id="new-category" placeholder="تصنيف جديد" />
+              <button type="button" id="add-category-btn">إضافة</button>
+            </div>
+
+            <label>الوصف الأساسي</label>
+            <input type="text" id="works-main" placeholder="مثال: جلسة تصوير زفاف" required />
+
+            <label>الوصف الفرعي</label>
+            <textarea id="works-sub" rows="2" placeholder="تفاصيل إضافية عن الصورة"></textarea>
+
+            <button type="submit" class="primary" id="works-submit-btn">إضافة العمل</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>الأعمال المضافة</h3>
+          <div id="works-list"><p class="empty-msg">جاري التحميل...</p></div>
+        </div>
+      </div>
+
+      <!-- تبويب آخر الأخبار -->
+      <div class="panel" id="panel-news">
+        <div class="card">
+          <h3>إضافة خبر جديد</h3>
+          <form id="form-news">
+            <label>الصورة (إلزامي)</label>
+            <input type="file" id="news-file" accept="image/*" required />
+            <img id="news-preview" alt="معاينة" />
+            <div class="upload-status" id="news-upload-status"></div>
+
+            <label>الوصف الأساسي (اختياري)</label>
+            <input type="text" id="news-main" placeholder="عنوان الخبر" />
+
+            <label>الوصف الفرعي (اختياري)</label>
+            <textarea id="news-sub" rows="2" placeholder="تفاصيل إضافية"></textarea>
+
+            <button type="submit" class="primary" id="news-submit-btn">نشر الخبر</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>الأخبار المنشورة</h3>
+          <div id="news-list"><p class="empty-msg">جاري التحميل...</p></div>
+        </div>
+      </div>
+    </main>
+    <script src="main.js" type="module"></script>
+  </body>
+</html>

@@ -119,7 +119,56 @@ function isHeic(file) {
   return type.includes("heic") || type.includes("heif") || name.endsWith(".heic") || name.endsWith(".heif");
 }
 
-// يفحص هل المتصفح فعلياً بيقدر يصدّر WebP (بعض المتصفحات القديمة بترجع PNG بصمت)
+// يجرب يشفّر الكانفاس بجودة معيّنة ويرجع Blob (Promise wrapper حول toBlob)
+function encodeCanvas(canvas, type, quality) {
+  return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+}
+
+// ضغط متدرّج: بيحاول يوصل لحجم مستهدف (targetKB) بالتنازل بالجودة، وإذا ما كفى بالأبعاد كمان
+// بحدود دنيا حتى ما تصير الصورة مشوّهة (minQuality / minDim)
+async function compressToTarget(
+  img,
+  outputType,
+  { startDim = 1800, startQuality = 0.85, targetKB = 180, minQuality = 0.55, minDim = 1000 } = {},
+) {
+  let dim = startDim;
+  let quality = startQuality;
+  let bestBlob = null;
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    let { width, height } = img;
+    if (width > dim || height > dim) {
+      if (width > height) {
+        height = Math.round((height * dim) / width);
+        width = dim;
+      } else {
+        width = Math.round((width * dim) / height);
+        height = dim;
+      }
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+    const blob = await encodeCanvas(canvas, outputType, quality);
+    if (!blob) break;
+    bestBlob = blob;
+
+    if (blob.size <= targetKB * 1024) break; // وصلنا للحجم المطلوب
+
+    // ما وصلنا بعد: أول شي ننزّل الجودة تدريجياً
+    if (quality > minQuality) {
+      quality = Math.max(minQuality, quality - 0.1);
+    } else if (dim > minDim) {
+      // الجودة وصلت لأدنى حد مقبول، ننزّل الأبعاد بدل ما نكمل نضغط
+      dim = Math.max(minDim, dim - 200);
+      quality = 0.75; // نرجّع الجودة لمستوى معقول بعد ما صغّرنا الأبعاد
+    } else {
+      break; // وصلنا للحدود الدنيا من الجودة والأبعاد، منوقف هون
+    }
+  }
+  return bestBlob;
+}
 let webpSupportPromise = null;
 function supportsWebp() {
   if (!webpSupportPromise) {
@@ -132,7 +181,7 @@ function supportsWebp() {
   return webpSupportPromise;
 }
 
-async function resizeImage(file, maxDim = 1800, quality = 0.85) {
+async function resizeImage(file, targetKB = 180) {
   let sourceFile = file;
 
   // 1) لو الصورة HEIC/HEIF (آيفون) حوّلها لـ JPEG أول، المتصفح ما بيقدر يفكّها مباشرة
@@ -155,36 +204,16 @@ async function resizeImage(file, maxDim = 1800, quality = 0.85) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
+      img.onload = async () => {
+        const blob = await compressToTarget(img, outputType, { targetKB });
+        if (!blob) {
+          console.warn("فشل الضغط، رح تترفع الصورة الأصلية بدون تصغير");
+          return resolve({ file: sourceFile, wasOptimized: false });
         }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              console.warn("فشل الضغط، رح تترفع الصورة الأصلية بدون تصغير");
-              return resolve({ file: sourceFile, wasOptimized: false });
-            }
-            resolve({
-              file: new File([blob], (sourceFile.name || "image") + outputExt, { type: outputType }),
-              wasOptimized: true,
-            });
-          },
-          outputType,
-          quality,
-        );
+        resolve({
+          file: new File([blob], (sourceFile.name || "image") + outputExt, { type: outputType }),
+          wasOptimized: true,
+        });
       };
       img.onerror = () => {
         console.warn("فشل تحميل الصورة بالـ canvas، رح تترفع الصورة الأصلية");

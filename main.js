@@ -103,7 +103,54 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
    تسريع الرفع: تصغير الصورة بالمتصفح قبل ما تترفع
    (بيقلل حجم الملف بشكل كبير بدون فرق واضح بالجودة)
    ========================================================= */
-function resizeImage(file, maxDim = 1600, quality = 0.82) {
+
+// كاش لمكتبة heic2any (تحويل صور آيفون HEIC/HEIF لصيغة يقدر المتصفح يفكّها)
+let heic2anyPromise = null;
+function loadHeic2any() {
+  if (!heic2anyPromise) {
+    heic2anyPromise = import("https://esm.sh/heic2any@0.0.4").then((m) => m.default || m);
+  }
+  return heic2anyPromise;
+}
+
+function isHeic(file) {
+  const type = (file.type || "").toLowerCase();
+  const name = (file.name || "").toLowerCase();
+  return type.includes("heic") || type.includes("heif") || name.endsWith(".heic") || name.endsWith(".heif");
+}
+
+// يفحص هل المتصفح فعلياً بيقدر يصدّر WebP (بعض المتصفحات القديمة بترجع PNG بصمت)
+let webpSupportPromise = null;
+function supportsWebp() {
+  if (!webpSupportPromise) {
+    webpSupportPromise = new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      canvas.toBlob((blob) => resolve(!!blob && blob.type === "image/webp"), "image/webp");
+    });
+  }
+  return webpSupportPromise;
+}
+
+async function resizeImage(file, maxDim = 1800, quality = 0.85) {
+  let sourceFile = file;
+
+  // 1) لو الصورة HEIC/HEIF (آيفون) حوّلها لـ JPEG أول، المتصفح ما بيقدر يفكّها مباشرة
+  if (isHeic(file)) {
+    try {
+      const heic2any = await loadHeic2any();
+      const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+      sourceFile = new File([convertedBlob], (file.name || "image") + ".jpg", { type: "image/jpeg" });
+    } catch (err) {
+      console.warn("فشل تحويل HEIC، رح تترفع الصورة الأصلية:", err);
+      return { file, wasOptimized: false };
+    }
+  }
+
+  const useWebp = await supportsWebp();
+  const outputType = useWebp ? "image/webp" : "image/jpeg";
+  const outputExt = useWebp ? ".webp" : ".jpg";
+
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -126,23 +173,35 @@ function resizeImage(file, maxDim = 1600, quality = 0.82) {
         ctx.drawImage(img, 0, 0, width, height);
         canvas.toBlob(
           (blob) => {
-            if (!blob) return resolve(file); // فشل الضغط؟ ارفع الأصلية
-            resolve(new File([blob], (file.name || "image") + ".jpg", { type: "image/jpeg" }));
+            if (!blob) {
+              console.warn("فشل الضغط، رح تترفع الصورة الأصلية بدون تصغير");
+              return resolve({ file: sourceFile, wasOptimized: false });
+            }
+            resolve({
+              file: new File([blob], (sourceFile.name || "image") + outputExt, { type: outputType }),
+              wasOptimized: true,
+            });
           },
-          "image/jpeg",
+          outputType,
           quality,
         );
       };
-      img.onerror = () => resolve(file);
+      img.onerror = () => {
+        console.warn("فشل تحميل الصورة بالـ canvas، رح تترفع الصورة الأصلية");
+        resolve({ file: sourceFile, wasOptimized: false });
+      };
       img.src = e.target.result;
     };
-    reader.onerror = () => resolve(file);
-    reader.readAsDataURL(file);
+    reader.onerror = () => resolve({ file: sourceFile, wasOptimized: false });
+    reader.readAsDataURL(sourceFile);
   });
 }
 
-async function uploadOneToCloudinary(file) {
-  const optimized = await resizeImage(file);
+async function uploadOneToCloudinary(file, statusEl = null) {
+  const { file: optimized, wasOptimized } = await resizeImage(file);
+  if (!wasOptimized && statusEl) {
+    statusEl.textContent = `تنبيه: تعذّر ضغط "${file.name}" — رح ترفع بحجمها الأصلي`;
+  }
   const formData = new FormData();
   formData.append("file", optimized);
   formData.append("upload_preset", UPLOAD_PRESET);
@@ -159,7 +218,7 @@ async function uploadOneToCloudinary(file) {
 async function uploadManyToCloudinary(files, statusEl) {
   if (files.length === 0) return [];
   statusEl.textContent = `جاري رفع ${files.length} صورة...`;
-  const urls = await Promise.all(files.map((f) => uploadOneToCloudinary(f)));
+  const urls = await Promise.all(files.map((f) => uploadOneToCloudinary(f, statusEl)));
   statusEl.textContent = `تم رفع ${files.length} صورة ✔`;
   return urls;
 }
@@ -335,7 +394,7 @@ worksForm.addEventListener("submit", async (e) => {
     let imgUrl = editingWorkImage;
     if (file) {
       statusEl.textContent = "جاري رفع الصورة...";
-      imgUrl = await uploadOneToCloudinary(file);
+      imgUrl = await uploadOneToCloudinary(file, statusEl);
       statusEl.textContent = "تم رفع الصورة ✔";
     }
 
@@ -523,7 +582,7 @@ newsForm.addEventListener("submit", async (e) => {
     let mainImage = newsMainExistingUrl;
     if (newsMainNewFile) {
       statusEl.textContent = "جاري رفع الصورة الرئيسية...";
-      mainImage = await uploadOneToCloudinary(newsMainNewFile);
+      mainImage = await uploadOneToCloudinary(newsMainNewFile, statusEl);
     }
 
     const newSubUrls = await uploadManyToCloudinary(newsSubNewFiles, statusEl);

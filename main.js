@@ -68,7 +68,6 @@ document.getElementById("login-btn").addEventListener("click", async () => {
   }
 });
 
-// السماح بتسجيل الدخول بالضغط على Enter
 document.getElementById("login-pass").addEventListener("keydown", (e) => {
   if (e.key === "Enter") document.getElementById("login-btn").click();
 });
@@ -80,7 +79,7 @@ onAuthStateChanged(auth, (user) => {
     loginScreen.style.display = "none";
     dashboard.style.display = "block";
     logoutBtn.style.display = "inline-block";
-    loadCategories();
+    listenCategories();
     listenWorks();
     listenNews();
   } else {
@@ -100,10 +99,52 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
   });
 });
 
-// ---------- رفع صورة واحدة على Cloudinary ----------
+/* =========================================================
+   تسريع الرفع: تصغير الصورة بالمتصفح قبل ما تترفع
+   (بيقلل حجم الملف بشكل كبير بدون فرق واضح بالجودة)
+   ========================================================= */
+function resizeImage(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file); // فشل الضغط؟ ارفع الأصلية
+            resolve(new File([blob], (file.name || "image") + ".jpg", { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          quality,
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadOneToCloudinary(file) {
+  const optimized = await resizeImage(file);
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", optimized);
   formData.append("upload_preset", UPLOAD_PRESET);
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
     method: "POST",
@@ -114,142 +155,212 @@ async function uploadOneToCloudinary(file) {
   return data.secure_url;
 }
 
-// ---------- رفع عدة صور بالتتابع مع تحديث حالة التقدم ----------
+// رفع عدة صور بالتوازي (أسرع بكتير من رفعهم وحدة وحدة)
 async function uploadManyToCloudinary(files, statusEl) {
-  const urls = [];
-  for (let i = 0; i < files.length; i++) {
-    statusEl.textContent = `جاري رفع الصورة ${i + 1} من ${files.length}...`;
-    const url = await uploadOneToCloudinary(files[i]);
-    urls.push(url);
-  }
+  if (files.length === 0) return [];
+  statusEl.textContent = `جاري رفع ${files.length} صورة...`;
+  const urls = await Promise.all(files.map((f) => uploadOneToCloudinary(f)));
   statusEl.textContent = `تم رفع ${files.length} صورة ✔`;
   return urls;
 }
 
-// معاينة صورة واحدة (آخر الأعمال)
-document.getElementById("works-file").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  const preview = document.getElementById("works-preview");
-  if (file) {
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-  } else {
-    preview.style.display = "none";
-  }
-});
-
-// معاينة الصورة الرئيسية (آخر الأخبار)
-document.getElementById("news-main-file").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  const preview = document.getElementById("news-main-preview");
-  if (file) {
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-  } else {
-    preview.style.display = "none";
-  }
-});
-
-// معاينة الصور الفرعية (آخر الأخبار)
-document.getElementById("news-sub-files").addEventListener("change", (e) => {
-  const files = Array.from(e.target.files);
-  const container = document.getElementById("news-sub-preview");
-  container.innerHTML = "";
-  if (files.length === 0) return;
-
-  const badge = document.createElement("div");
-  badge.className = "count-badge";
-  badge.textContent = `تم اختيار ${files.length} صورة فرعية`;
-  container.appendChild(badge);
-
-  files.forEach((file) => {
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    container.appendChild(img);
-  });
-});
-
-// ---------- التصنيفات ----------
+/* =========================================================
+   التصنيفات (تبويب مستقل: إضافة / تعديل / حذف)
+   ========================================================= */
 const categorySelect = document.getElementById("works-category");
+const categoryForm = document.getElementById("form-category");
+const categoryInput = document.getElementById("category-name-input");
+const categorySaveBtn = document.getElementById("category-save-btn");
+const categoryCancelBtn = document.getElementById("category-cancel-btn");
+const categoryFormTitle = document.getElementById("category-form-title");
+let editingCategoryId = null;
 
-function loadCategories() {
+function listenCategories() {
   const q = query(collection(db, "categories"), orderBy("name"));
-  onSnapshot(
-    q,
-    (snap) => {
-      categorySelect.innerHTML = "";
-      if (snap.empty) {
-        const opt = document.createElement("option");
-        opt.textContent = "أضف تصنيف أولاً";
-        opt.disabled = true;
-        categorySelect.appendChild(opt);
-        return;
-      }
+  onSnapshot(q, (snap) => {
+    // تحديث قائمة الاختيار بفورم الأعمال
+    categorySelect.innerHTML = "";
+    if (snap.empty) {
+      const opt = document.createElement("option");
+      opt.textContent = "أضف تصنيف أولاً من تبويب التصنيفات";
+      opt.disabled = true;
+      categorySelect.appendChild(opt);
+    } else {
       snap.forEach((d) => {
         const opt = document.createElement("option");
         opt.value = d.data().name;
         opt.textContent = d.data().name;
         categorySelect.appendChild(opt);
       });
-    },
-    (err) => {
-      console.error("فشل تحميل التصنيفات:", err);
-    },
-  );
+    }
+
+    // تحديث قائمة إدارة التصنيفات
+    const list = document.getElementById("categories-list");
+    if (snap.empty) {
+      list.innerHTML = '<p class="empty-msg">لسا ما في تصنيفات مضافة</p>';
+      return;
+    }
+    list.innerHTML = "";
+    snap.forEach((d) => {
+      const data = d.data();
+      const row = document.createElement("div");
+      row.className = "category-row";
+      row.innerHTML = `
+        <span class="cat-name">${data.name}</span>
+        <div class="item-actions">
+          <button class="edit" data-id="${d.id}" data-name="${data.name}">تعديل</button>
+          <button class="del" data-id="${d.id}">حذف</button>
+        </div>`;
+      row.querySelector(".edit").addEventListener("click", () => startEditCategory(d.id, data.name));
+      row.querySelector(".del").addEventListener("click", async () => {
+        if (confirm(`متأكد بدك تحذف تصنيف "${data.name}"؟ (الأعمال القديمة المرتبطة فيه رح تحتفظ باسمه القديم)`)) {
+          await deleteDoc(doc(db, "categories", d.id));
+        }
+      });
+      list.appendChild(row);
+    });
+  });
 }
 
-document.getElementById("add-category-btn").addEventListener("click", async () => {
-  const input = document.getElementById("new-category");
-  const btn = document.getElementById("add-category-btn");
-  const name = input.value.trim();
+function startEditCategory(id, name) {
+  editingCategoryId = id;
+  categoryInput.value = name;
+  categorySaveBtn.textContent = "حفظ التعديل";
+  categoryFormTitle.textContent = "تعديل تصنيف";
+  categoryCancelBtn.style.display = "inline-block";
+  categoryInput.focus();
+}
+
+function resetCategoryForm() {
+  editingCategoryId = null;
+  categoryForm.reset();
+  categorySaveBtn.textContent = "إضافة تصنيف";
+  categoryFormTitle.textContent = "إضافة تصنيف جديد";
+  categoryCancelBtn.style.display = "none";
+}
+
+categoryCancelBtn.addEventListener("click", resetCategoryForm);
+
+categoryForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = categoryInput.value.trim();
   if (!name) return;
-  btn.disabled = true;
+  categorySaveBtn.disabled = true;
   try {
-    await addDoc(collection(db, "categories"), { name });
-    input.value = "";
+    if (editingCategoryId) {
+      await updateDoc(doc(db, "categories", editingCategoryId), { name });
+    } else {
+      await addDoc(collection(db, "categories"), { name });
+    }
+    resetCategoryForm();
   } catch (err) {
-    console.error("فشل إضافة التصنيف:", err);
-    alert("ما قدرنا نضيف التصنيف: " + err.message);
+    alert("صار خطأ: " + err.message);
   }
-  btn.disabled = false;
+  categorySaveBtn.disabled = false;
 });
 
-// ---------- آخر الأعمال: إضافة (صورة واحدة زي ما هي) ----------
-document.getElementById("form-works").addEventListener("submit", async (e) => {
+/* =========================================================
+   آخر الأعمال (إضافة / تعديل / حذف)
+   ========================================================= */
+const worksForm = document.getElementById("form-works");
+const worksFileInput = document.getElementById("works-file");
+const worksPreview = document.getElementById("works-preview");
+const worksSubmitBtn = document.getElementById("works-submit-btn");
+const worksCancelBtn = document.getElementById("works-cancel-btn");
+const worksFormTitle = document.getElementById("works-form-title");
+const worksCard = worksForm.closest(".card");
+
+let editingWorkId = null;
+let editingWorkImage = null; // رابط الصورة الحالية وقت التعديل
+
+worksFileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    worksPreview.src = URL.createObjectURL(file);
+    worksPreview.style.display = "block";
+  } else if (editingWorkImage) {
+    worksPreview.src = editingWorkImage;
+    worksPreview.style.display = "block";
+  } else {
+    worksPreview.style.display = "none";
+  }
+});
+
+function startEditWork(id, item) {
+  editingWorkId = id;
+  editingWorkImage = item.img || null;
+  worksFileInput.required = false;
+  worksFileInput.value = "";
+  if (editingWorkImage) {
+    worksPreview.src = editingWorkImage;
+    worksPreview.style.display = "block";
+  }
+  categorySelect.value = item.category || "";
+  document.getElementById("works-main").value = item.title || "";
+  document.getElementById("works-sub").value = item.sub || "";
+  worksSubmitBtn.textContent = "حفظ التعديل";
+  worksFormTitle.textContent = "تعديل عمل";
+  worksCancelBtn.style.display = "inline-block";
+  worksCard.classList.add("editing");
+  worksCard.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function resetWorksForm() {
+  editingWorkId = null;
+  editingWorkImage = null;
+  worksForm.reset();
+  worksPreview.style.display = "none";
+  worksFileInput.required = true;
+  worksSubmitBtn.textContent = "إضافة العمل";
+  worksFormTitle.textContent = "إضافة عمل جديد";
+  worksCancelBtn.style.display = "none";
+  worksCard.classList.remove("editing");
+}
+
+worksCancelBtn.addEventListener("click", resetWorksForm);
+
+worksForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const btn = document.getElementById("works-submit-btn");
-  const fileInput = document.getElementById("works-file");
   const statusEl = document.getElementById("works-upload-status");
-  const file = fileInput.files[0];
-  if (!file) {
+  const file = worksFileInput.files[0];
+
+  if (!file && !editingWorkImage) {
     statusEl.textContent = "الصورة إلزامية";
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = "جاري الإضافة...";
+  worksSubmitBtn.disabled = true;
+  worksSubmitBtn.textContent = editingWorkId ? "جاري الحفظ..." : "جاري الإضافة...";
   try {
-    statusEl.textContent = "جاري رفع الصورة...";
-    const imageUrl = await uploadOneToCloudinary(file);
-    statusEl.textContent = "تم رفع الصورة ✔";
-    await addDoc(collection(db, "works"), {
-      img: imageUrl,
+    let imgUrl = editingWorkImage;
+    if (file) {
+      statusEl.textContent = "جاري رفع الصورة...";
+      imgUrl = await uploadOneToCloudinary(file);
+      statusEl.textContent = "تم رفع الصورة ✔";
+    }
+
+    const payload = {
+      img: imgUrl,
       category: categorySelect.value,
       title: document.getElementById("works-main").value.trim(),
       sub: document.getElementById("works-sub").value.trim(),
-      createdAt: serverTimestamp(),
-    });
-    e.target.reset();
-    document.getElementById("works-preview").style.display = "none";
+    };
+
+    if (editingWorkId) {
+      await updateDoc(doc(db, "works", editingWorkId), payload);
+    } else {
+      await addDoc(collection(db, "works"), { ...payload, createdAt: serverTimestamp() });
+    }
+
+    resetWorksForm();
     statusEl.textContent = "";
   } catch (err) {
     statusEl.textContent = "صار خطأ، جرب مرة ثانية";
   }
-  btn.disabled = false;
-  btn.textContent = "إضافة العمل";
+  worksSubmitBtn.disabled = false;
+  worksSubmitBtn.textContent = editingWorkId ? "حفظ التعديل" : "إضافة العمل";
 });
 
-// ---------- آخر الأعمال: عرض وحذف ----------
 function listenWorks() {
   const q = query(collection(db, "works"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snap) => {
@@ -271,8 +382,10 @@ function listenWorks() {
           <p class="sub">${item.sub || ""}</p>
         </div>
         <div class="item-actions">
-          <button class="del" data-id="${d.id}">حذف</button>
+          <button class="edit">تعديل</button>
+          <button class="del">حذف</button>
         </div>`;
+      row.querySelector(".edit").addEventListener("click", () => startEditWork(d.id, item));
       row.querySelector(".del").addEventListener("click", async () => {
         if (confirm("متأكد بدك تحذف هالعنصر؟")) await deleteDoc(doc(db, "works", d.id));
       });
@@ -281,51 +394,163 @@ function listenWorks() {
   });
 }
 
-// ---------- آخر الأخبار: إضافة (صورة رئيسية اختيارية + صور فرعية اختيارية بأي عدد) ----------
-document.getElementById("form-news").addEventListener("submit", async (e) => {
+/* =========================================================
+   آخر الأخبار (صورة رئيسية اختيارية + صور فرعية اختيارية،
+   إضافة / تعديل / حذف)
+   ========================================================= */
+const newsForm = document.getElementById("form-news");
+const newsMainFileInput = document.getElementById("news-main-file");
+const newsMainPreviewWrap = document.getElementById("news-main-preview-wrap");
+const newsSubFilesInput = document.getElementById("news-sub-files");
+const newsSubPreview = document.getElementById("news-sub-preview");
+const newsSubmitBtn = document.getElementById("news-submit-btn");
+const newsCancelBtn = document.getElementById("news-cancel-btn");
+const newsFormTitle = document.getElementById("news-form-title");
+const newsCard = newsForm.closest(".card");
+
+let editingNewsId = null;
+let newsMainExistingUrl = null; // صورة رئيسية محفوظة سلفاً (وضع التعديل)
+let newsMainNewFile = null; // صورة رئيسية جديدة مختارة الآن
+let newsSubExistingUrls = []; // صور فرعية محفوظة سلفاً (وضع التعديل)
+let newsSubNewFiles = []; // صور فرعية جديدة مضافة الآن
+
+function renderNewsMainPreview() {
+  newsMainPreviewWrap.innerHTML = "";
+  const url = newsMainNewFile ? URL.createObjectURL(newsMainNewFile) : newsMainExistingUrl;
+  if (!url) return;
+  const box = document.createElement("div");
+  box.className = "main-preview-box";
+  box.innerHTML = `<img src="${url}" alt=""><button type="button" class="remove-x" title="إزالة">✕</button>`;
+  box.querySelector(".remove-x").addEventListener("click", () => {
+    newsMainNewFile = null;
+    newsMainExistingUrl = null;
+    newsMainFileInput.value = "";
+    renderNewsMainPreview();
+  });
+  newsMainPreviewWrap.appendChild(box);
+}
+
+newsMainFileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    newsMainNewFile = file;
+    renderNewsMainPreview();
+  }
+});
+
+function renderNewsSubPreview() {
+  newsSubPreview.innerHTML = "";
+  const total = newsSubExistingUrls.length + newsSubNewFiles.length;
+  if (total === 0) return;
+
+  const badge = document.createElement("div");
+  badge.className = "count-badge";
+  badge.textContent = `${total} صورة فرعية`;
+  newsSubPreview.appendChild(badge);
+
+  newsSubExistingUrls.forEach((url, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "thumb-wrap";
+    wrap.innerHTML = `<img src="${url}" alt=""><button type="button" class="remove-x">✕</button>`;
+    wrap.querySelector(".remove-x").addEventListener("click", () => {
+      newsSubExistingUrls.splice(idx, 1);
+      renderNewsSubPreview();
+    });
+    newsSubPreview.appendChild(wrap);
+  });
+
+  newsSubNewFiles.forEach((file, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "thumb-wrap";
+    wrap.innerHTML = `<img src="${URL.createObjectURL(file)}" alt=""><button type="button" class="remove-x">✕</button>`;
+    wrap.querySelector(".remove-x").addEventListener("click", () => {
+      newsSubNewFiles.splice(idx, 1);
+      renderNewsSubPreview();
+    });
+    newsSubPreview.appendChild(wrap);
+  });
+}
+
+// كل مرة تختار صور، تنضاف على القائمة (مش تستبدلها) — هيك تقدر تضيف على دفعات
+newsSubFilesInput.addEventListener("change", (e) => {
+  const files = Array.from(e.target.files);
+  newsSubNewFiles.push(...files);
+  newsSubFilesInput.value = "";
+  renderNewsSubPreview();
+});
+
+function startEditNews(id, item) {
+  editingNewsId = id;
+  newsMainExistingUrl = item.mainImage || item.imageUrl || null;
+  newsMainNewFile = null;
+  newsSubExistingUrls = [...(item.subImages || item.images || [])];
+  newsSubNewFiles = [];
+  renderNewsMainPreview();
+  renderNewsSubPreview();
+  document.getElementById("news-main").value = item.mainDesc || "";
+  document.getElementById("news-sub").value = item.subDesc || "";
+  newsSubmitBtn.textContent = "حفظ التعديل";
+  newsFormTitle.textContent = "تعديل خبر";
+  newsCancelBtn.style.display = "inline-block";
+  newsCard.classList.add("editing");
+  newsCard.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function resetNewsForm() {
+  editingNewsId = null;
+  newsMainExistingUrl = null;
+  newsMainNewFile = null;
+  newsSubExistingUrls = [];
+  newsSubNewFiles = [];
+  newsForm.reset();
+  newsMainPreviewWrap.innerHTML = "";
+  newsSubPreview.innerHTML = "";
+  newsSubmitBtn.textContent = "نشر الخبر";
+  newsFormTitle.textContent = "إضافة خبر جديد";
+  newsCancelBtn.style.display = "none";
+  newsCard.classList.remove("editing");
+}
+
+newsCancelBtn.addEventListener("click", resetNewsForm);
+
+newsForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const btn = document.getElementById("news-submit-btn");
-  const mainFileInput = document.getElementById("news-main-file");
-  const subFilesInput = document.getElementById("news-sub-files");
   const statusEl = document.getElementById("news-upload-status");
 
-  const mainFile = mainFileInput.files[0] || null;
-  const subFiles = Array.from(subFilesInput.files);
-
-  btn.disabled = true;
-  btn.textContent = "جاري النشر...";
+  newsSubmitBtn.disabled = true;
+  newsSubmitBtn.textContent = editingNewsId ? "جاري الحفظ..." : "جاري النشر...";
   try {
-    let mainImage = null;
-    if (mainFile) {
+    let mainImage = newsMainExistingUrl;
+    if (newsMainNewFile) {
       statusEl.textContent = "جاري رفع الصورة الرئيسية...";
-      mainImage = await uploadOneToCloudinary(mainFile);
+      mainImage = await uploadOneToCloudinary(newsMainNewFile);
     }
 
-    let subImages = [];
-    if (subFiles.length > 0) {
-      subImages = await uploadManyToCloudinary(subFiles, statusEl);
-    }
+    const newSubUrls = await uploadManyToCloudinary(newsSubNewFiles, statusEl);
+    const subImages = [...newsSubExistingUrls, ...newSubUrls];
 
-    statusEl.textContent = "تم الرفع ✔";
-    await addDoc(collection(db, "news"), {
-      mainImage,
+    const payload = {
+      mainImage: mainImage || null,
       subImages,
       mainDesc: document.getElementById("news-main").value.trim(),
       subDesc: document.getElementById("news-sub").value.trim(),
-      createdAt: serverTimestamp(),
-    });
-    e.target.reset();
-    document.getElementById("news-main-preview").style.display = "none";
-    document.getElementById("news-sub-preview").innerHTML = "";
+    };
+
+    if (editingNewsId) {
+      await updateDoc(doc(db, "news", editingNewsId), payload);
+    } else {
+      await addDoc(collection(db, "news"), { ...payload, createdAt: serverTimestamp() });
+    }
+
+    resetNewsForm();
     statusEl.textContent = "";
   } catch (err) {
     statusEl.textContent = "صار خطأ، جرب مرة ثانية";
   }
-  btn.disabled = false;
-  btn.textContent = "نشر الخبر";
+  newsSubmitBtn.disabled = false;
+  newsSubmitBtn.textContent = editingNewsId ? "حفظ التعديل" : "نشر الخبر";
 });
 
-// ---------- آخر الأخبار: عرض وحذف ----------
 function listenNews() {
   const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snap) => {
@@ -337,10 +562,8 @@ function listenNews() {
     list.innerHTML = "";
     snap.forEach((d) => {
       const item = d.data();
-      // توافق مع البيانات القديمة (imageUrl / images) قبل تعديل الصورة الرئيسية والفرعية
       const mainImage = item.mainImage || item.imageUrl || null;
       const subImages = item.subImages || item.images || [];
-
       const mainImgHtml = mainImage ? `<img src="${mainImage}" alt="">` : `<div class="no-img">بدون صورة رئيسية</div>`;
       const subImagesHtml = subImages.map((url) => `<img src="${url}" alt="">`).join("");
 
@@ -356,8 +579,10 @@ function listenNews() {
           <p class="sub">${item.subDesc || ""}</p>
         </div>
         <div class="item-actions">
-          <button class="del" data-id="${d.id}">حذف</button>
+          <button class="edit">تعديل</button>
+          <button class="del">حذف</button>
         </div>`;
+      row.querySelector(".edit").addEventListener("click", () => startEditNews(d.id, item));
       row.querySelector(".del").addEventListener("click", async () => {
         if (confirm("متأكد بدك تحذف هالعنصر؟")) await deleteDoc(doc(db, "news", d.id));
       });

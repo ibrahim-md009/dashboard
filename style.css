@@ -314,7 +314,6 @@ main {
 .panel {
   display: none;
 }
-
 .panel.active {
   display: block;
 }
@@ -344,7 +343,6 @@ main {
   pointer-events: none;
   opacity: 0.75;
 }
-
 .card::before {
   top: 10px;
   right: 10px;
@@ -352,7 +350,6 @@ main {
   border-right: 2px solid var(--gold);
   border-radius: 0 4px 0 0;
 }
-
 .card::after {
   bottom: 10px;
   left: 10px;
@@ -375,15 +372,12 @@ main {
   display: flex;
   gap: 8px;
 }
-
 .cat-row select {
   flex: 2;
 }
-
 .cat-row input {
   flex: 1;
 }
-
 .cat-row button {
   padding: 0 16px;
   border-radius: var(--radius-sm);
@@ -395,7 +389,6 @@ main {
   font-family: var(--font-body);
   transition: background 0.2s ease;
 }
-
 .cat-row button:hover {
   background: rgba(232, 207, 138, 0.18);
 }
@@ -418,7 +411,6 @@ main {
   gap: 8px;
   margin-bottom: 14px;
 }
-
 .multi-preview img {
   width: 68px;
   height: 68px;
@@ -426,7 +418,6 @@ main {
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border-soft);
 }
-
 .multi-preview .count-badge {
   font-size: 12px;
   color: var(--muted);
@@ -447,11 +438,9 @@ main {
   padding: 14px 4px;
   border-bottom: 1px solid var(--glass-border-soft);
 }
-
 .item:last-child {
   border-bottom: none;
 }
-
 .item img {
   width: 68px;
   height: 68px;
@@ -469,7 +458,6 @@ main {
   overflow-x: auto;
   max-width: 160px;
 }
-
 .item-images .no-img {
   width: 68px;
   height: 68px;
@@ -485,7 +473,6 @@ main {
   text-align: center;
   padding: 4px;
 }
-
 .item-images img {
   width: 68px;
   height: 68px;
@@ -499,7 +486,6 @@ main {
   flex: 1;
   min-width: 0;
 }
-
 .item-info .tag {
   display: inline-block;
   font-size: 11px;
@@ -510,14 +496,12 @@ main {
   border-radius: 999px;
   margin-bottom: 6px;
 }
-
 .item-info .main {
   font-size: 14px;
   font-weight: 700;
   margin: 2px 0;
   color: var(--ink);
 }
-
 .item-info .sub {
   font-size: 13px;
   color: var(--muted);
@@ -530,7 +514,6 @@ main {
   flex-direction: column;
   gap: 6px;
 }
-
 .item-actions button {
   font-size: 12px;
   padding: 7px 12px;
@@ -545,14 +528,111 @@ main {
     color 0.2s ease,
     border-color 0.2s ease;
 }
-
 .item-actions button.del {
   color: var(--danger);
   border-color: rgba(209, 106, 76, 0.4);
 }
-
 .item-actions button.del:hover {
   background: rgba(209, 106, 76, 0.15);
+}
+.item-actions button.edit {
+  color: var(--gold-soft);
+  border-color: var(--glass-border);
+}
+.item-actions button.edit:hover {
+  background: rgba(232, 207, 138, 0.15);
+}
+
+/* ============ Form actions row (submit + cancel) ============ */
+.form-actions {
+  display: flex;
+  gap: 10px;
+}
+.form-actions button.primary {
+  flex: 2;
+}
+button.secondary {
+  flex: 1;
+  background: var(--glass);
+  color: var(--muted);
+  border: 1px solid var(--glass-border-soft);
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+button.secondary:hover {
+  background: var(--glass-strong);
+}
+
+/* editing state highlight on the card */
+.card.editing {
+  border-color: var(--gold);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(205, 165, 69, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* existing image thumbnails (edit mode) with remove buttons */
+.existing-single,
+.multi-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.thumb-wrap {
+  position: relative;
+  width: 68px;
+  height: 68px;
+}
+.thumb-wrap img {
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border-soft);
+}
+.thumb-wrap .remove-x {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* categories list rows */
+.cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--glass-border-soft);
+}
+.cat-item:last-child {
+  border-bottom: none;
+}
+.cat-item .cat-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.cat-item .item-actions {
+  flex-direction: row;
 }
 
 .empty-msg {
@@ -573,20 +653,16 @@ small.hint {
   header {
     padding: 14px 16px;
   }
-
   header h1 {
     font-size: 16px;
   }
-
   #login-screen {
     margin: 60px 16px;
     padding: 28px 22px;
   }
-
   main {
     padding: 20px 14px 50px;
   }
-
   .card {
     padding: 18px 16px;
   }
@@ -597,4 +673,118 @@ small.hint {
   * {
     transition: none !important;
   }
+}
+
+/* ============ إضافات: أزرار ثانوية وصفوف أزرار ============ */
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+.btn-row .primary {
+  flex: 2;
+}
+button.ghost {
+  flex: 1;
+  background: var(--glass);
+  border: 1px solid var(--glass-border-soft);
+  color: var(--muted);
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+button.ghost:hover {
+  background: var(--glass-strong);
+  color: var(--ink);
+}
+
+/* حالة التعديل: إطار ذهبي حول البطاقة النشطة بالتعديل */
+.card.editing {
+  border-color: var(--gold);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(205, 165, 69, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* معاينة الصورة الرئيسية بالأخبار (تحتوي صورة + زر إزالة) */
+.main-preview-box {
+  position: relative;
+  margin-bottom: 14px;
+}
+.main-preview-box img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border-soft);
+  display: block;
+}
+.main-preview-box .remove-x {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(20, 22, 15, 0.75);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+}
+
+/* عنصر واحد بمعاينة الصور المتعددة (فيه زر إزالة صغير) */
+.thumb-wrap {
+  position: relative;
+  width: 68px;
+  height: 68px;
+}
+.thumb-wrap img {
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border-soft);
+}
+.thumb-wrap .remove-x {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* قائمة التصنيفات */
+.category-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--glass-border-soft);
+}
+.category-row:last-child {
+  border-bottom: none;
+}
+.category-row .cat-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.category-row .item-actions {
+  flex-direction: row;
 }

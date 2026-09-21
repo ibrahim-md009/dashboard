@@ -39,7 +39,7 @@ export const updateWork = async (id, payload) => {
  * @param {string} id
  */
 export const deleteWork = async (id) => {
-  const docRef = doc(doc(db, COLLECTION_NAME, id));
+  const docRef = doc(db, COLLECTION_NAME, id); // ✅ تم التصحيح: doc واحدة فقط تاخد db و collection و id
   return await deleteDoc(docRef);
 };
 

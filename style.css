@@ -1,32 +1,104 @@
 /* ============ Design tokens ============ */
 :root {
-  --bg-deep: #171b12;
-  --bg-olive-1: #232a1a;
-  --bg-olive-2: #333d22;
+  /* ---- ألوان الهوية (نفس توكنز الموقع بالظبط) ---- */
+  --olive-dark: #194d41; /* أساسي — أخضر غامق */
+  --gold: #cba135; /* أساسي — ذهبي */
+  --olive: #64987f; /* فرعي — أخضر فاتح */
+  --cream-2: #eedfb6; /* فرعي — بيج */
+  --olive-mid: #64987f;
+  --olive-light: #eedfb6;
+  --cream: #fff6dd; /* خلفية الصفحة */
+  --gold-soft: #d8b868; /* درجة أفتح من الذهبي للحدود والـ hover */
+  --charcoal: #10352c; /* لون النص — أخضر داكن جداً */
+  --white-soft: #fffcf2;
 
-  --gold: #cda545;
-  --gold-soft: #e8cf8a;
-  --gold-deep: #a67f2e;
+  /* ---- توكنز الداش بورد (مشتقة من ألوان الهوية) ---- */
+  --gold-deep: #a8842a; /* ذهبي أغمق للتدرّج والـ hover */
 
-  --ink: #f4efe2;
-  --muted: #b9b39c;
-  --muted-2: #8f8a76;
+  --ink: var(--charcoal);
+  --muted: #4d6b60; /* نص ثانوي (أخضر رمادي) */
+  --muted-2: #6f8a7f; /* placeholder */
 
-  --glass: rgba(255, 255, 255, 0.055);
-  --glass-strong: rgba(255, 255, 255, 0.095);
-  --glass-border: rgba(232, 207, 138, 0.28);
-  --glass-border-soft: rgba(232, 207, 138, 0.14);
+  --glass: rgba(255, 252, 242, 0.82); /* سطح البطاقات */
+  --glass-strong: rgba(238, 223, 182, 0.55); /* hover / سطح أقوى */
+  --glass-border: rgba(203, 161, 53, 0.55);
+  --glass-border-soft: rgba(203, 161, 53, 0.28);
 
-  --danger: #d16a4c;
+  --danger: #b5452b;
 
   --radius-lg: 20px;
   --radius-md: 14px;
   --radius-sm: 9px;
 
-  --font-display: "Amiri", "Georgia", serif;
-  --font-body: "Tajawal", "Segoe UI", sans-serif;
+  /* ---- الخطوط ---- */
+  --font-display: "Naveid Arabic ExtraBold", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-body: "Naveid Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-thin: "Naveid Arabic Thin", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-numbers: "Changa", "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
+/* ============================================
+   خط Naveid Arabic — الثلاث ملفات فقط،
+   كل وحدة باسم مستقل عشان الاختيار يبقى صريح مش تلقائي
+   ============================================ */
+@font-face {
+  font-family: "Naveid Arabic Thin";
+  src: url("./assets/fonts/naveid-arabic-demo_thin.woff2") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Naveid Arabic";
+  src: url("./assets/fonts/naveid-arabic-demo_regular.woff2") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Naveid Arabic ExtraBold";
+  src: url("./assets/fonts/naveid-arabic-demo_extra-bold.woff2") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================
+   رقعة مؤقتة للأرقام (0-9)
+   نسخة الديمو من Naveid عندها كل الأرقام بنفس الشكل الوهمي
+   (نفس الإحداثيات بالظبط في التلاتة أوزان، والرقم 9 مش موجود خالص)
+   فبنسحب الأرقام بس من خط Changa (بديل قريب الشكل) لحد ما تجيب
+   نسخة Naveid المرخّصة، وترجع تشيل الجزء ده وتمسحه
+   ============================================ */
+@font-face {
+  font-family: "Naveid Arabic Thin";
+  src: url("https://cdn.jsdelivr.net/fontsource/fonts/changa:vf@5.3.0/latin-wght-normal.woff2")
+    format("woff2-variations");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+@font-face {
+  font-family: "Naveid Arabic";
+  src: url("https://cdn.jsdelivr.net/fontsource/fonts/changa:vf@5.3.0/latin-wght-normal.woff2")
+    format("woff2-variations");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+@font-face {
+  font-family: "Naveid Arabic ExtraBold";
+  src: url("https://cdn.jsdelivr.net/fontsource/fonts/changa:vf@5.3.0/latin-wght-normal.woff2")
+    format("woff2-variations");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+
+/* ============ Base ============ */
 * {
   box-sizing: border-box;
 }
@@ -41,19 +113,19 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-weight: 400;
-  background-color: var(--bg-deep);
+  background-color: var(--cream);
   background-image:
-    radial-gradient(ellipse 700px 500px at 12% 8%, rgba(232, 207, 138, 0.16), transparent 55%),
-    radial-gradient(ellipse 800px 650px at 90% 90%, rgba(122, 140, 72, 0.3), transparent 55%),
-    radial-gradient(ellipse 600px 500px at 95% 5%, rgba(166, 127, 46, 0.14), transparent 50%),
-    linear-gradient(160deg, #191f13 0%, #232a1a 45%, #313b21 100%);
+    radial-gradient(ellipse 700px 500px at 12% 8%, rgba(216, 184, 104, 0.28), transparent 55%),
+    radial-gradient(ellipse 800px 650px at 90% 90%, rgba(100, 152, 127, 0.22), transparent 55%),
+    radial-gradient(ellipse 600px 500px at 95% 5%, rgba(203, 161, 53, 0.14), transparent 50%),
+    linear-gradient(160deg, #fff9e8 0%, var(--cream) 50%, #f7ebc7 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
 
 ::selection {
-  background: rgba(205, 165, 69, 0.35);
-  color: var(--ink);
+  background: rgba(203, 161, 53, 0.4);
+  color: var(--charcoal);
 }
 
 /* focus visibility (accessibility) */
@@ -61,7 +133,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--gold-soft);
+  outline: 2px solid var(--olive-dark);
   outline-offset: 2px;
 }
 
@@ -70,14 +142,21 @@ header {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(23, 27, 18, 0.55);
+  background: rgba(25, 77, 65, 0.96);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border-bottom: 1px solid var(--glass-border-soft);
+  border-bottom: 2px solid var(--gold);
   padding: 16px 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.brand-mark {
+  height: 42px;
+  width: auto;
+  display: block;
+  flex: none;
 }
 
 .brand {
@@ -113,16 +192,15 @@ header {
     var(--gold) 320deg 330deg,
     transparent 330deg 360deg
   );
-  box-shadow: 0 0 14px rgba(205, 165, 69, 0.45);
+  box-shadow: 0 0 14px rgba(203, 161, 53, 0.55);
 }
 
 header h1 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 19px;
   margin: 0;
-  letter-spacing: 0.2px;
-  color: var(--ink);
+  color: var(--cream);
 }
 
 header h1 span {
@@ -130,29 +208,27 @@ header h1 span {
   font-family: var(--font-body);
   font-weight: 400;
   font-size: 12px;
-  color: var(--muted);
-  letter-spacing: 1px;
+  color: var(--cream-2);
   margin-top: 2px;
 }
 
 header button {
-  background: var(--glass);
-  border: 1px solid var(--glass-border-soft);
-  color: var(--ink);
+  background: rgba(255, 246, 221, 0.08);
+  border: 1px solid rgba(238, 223, 182, 0.4);
+  color: var(--cream);
   padding: 9px 16px;
   border-radius: 999px;
   cursor: pointer;
   font-size: 13px;
   font-family: var(--font-body);
-  backdrop-filter: blur(10px);
   transition:
     background 0.2s ease,
     border-color 0.2s ease;
 }
 
 header button:hover {
-  background: var(--glass-strong);
-  border-color: var(--glass-border);
+  background: rgba(255, 246, 221, 0.18);
+  border-color: var(--gold-soft);
 }
 
 /* ============ Login screen ============ */
@@ -166,8 +242,8 @@ header button:hover {
   padding: 36px 32px;
   border-radius: var(--radius-lg);
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    0 20px 60px rgba(25, 77, 65, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   position: relative;
 }
 
@@ -175,9 +251,9 @@ header button:hover {
   margin: 0 0 24px;
   text-align: center;
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 24px;
-  color: var(--gold-soft);
+  color: var(--olive-dark);
 }
 
 /* ============ Form elements ============ */
@@ -190,7 +266,7 @@ textarea {
   border-radius: var(--radius-sm);
   font-size: 15px;
   margin-bottom: 14px;
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--white-soft);
   color: var(--ink);
   font-family: var(--font-body);
   transition:
@@ -206,18 +282,18 @@ textarea::placeholder {
 input:hover,
 select:hover,
 textarea:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: #fff;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--gold);
-  background: rgba(255, 255, 255, 0.08);
+  background: #fff;
 }
 
 select option {
-  background: #232a1a;
+  background: var(--white-soft);
   color: var(--ink);
 }
 
@@ -226,21 +302,20 @@ label {
   color: var(--muted);
   display: block;
   margin-bottom: 6px;
-  letter-spacing: 0.2px;
 }
 
 button.primary {
   background: linear-gradient(135deg, var(--gold-soft), var(--gold) 55%, var(--gold-deep));
-  color: #1e2115;
+  color: var(--charcoal);
   border: none;
   padding: 13px 16px;
   border-radius: var(--radius-sm);
   font-size: 15px;
-  font-weight: 700;
-  font-family: var(--font-body);
+  font-weight: 800;
+  font-family: var(--font-display);
   cursor: pointer;
   width: 100%;
-  box-shadow: 0 8px 22px rgba(205, 165, 69, 0.28);
+  box-shadow: 0 8px 22px rgba(203, 161, 53, 0.35);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -248,8 +323,8 @@ button.primary {
 }
 
 button.primary:hover {
-  filter: brightness(1.06);
-  box-shadow: 0 10px 26px rgba(205, 165, 69, 0.4);
+  filter: brightness(1.05);
+  box-shadow: 0 10px 26px rgba(203, 161, 53, 0.5);
 }
 
 button.primary:active {
@@ -304,11 +379,17 @@ main {
     color 0.2s ease;
 }
 
+.tab-btn:hover {
+  background: var(--glass-strong);
+  color: var(--olive-dark);
+}
+
 .tab-btn.active {
-  background: linear-gradient(135deg, var(--gold-soft), var(--gold) 60%, var(--gold-deep));
-  color: #1e2115;
-  font-weight: 700;
-  box-shadow: 0 6px 18px rgba(205, 165, 69, 0.3);
+  background: var(--olive-dark);
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(25, 77, 65, 0.3);
 }
 
 .panel {
@@ -318,7 +399,7 @@ main {
   display: block;
 }
 
-/* ============ Glass cards with viewfinder corners ============ */
+/* ============ Cards with viewfinder corners ============ */
 .card {
   position: relative;
   background: var(--glass);
@@ -329,8 +410,8 @@ main {
   padding: 22px 20px;
   margin-bottom: 20px;
   box-shadow:
-    0 14px 40px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 14px 40px rgba(25, 77, 65, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* corner focus-brackets — nod to a camera viewfinder */
@@ -341,7 +422,7 @@ main {
   width: 18px;
   height: 18px;
   pointer-events: none;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 .card::before {
   top: 10px;
@@ -360,11 +441,19 @@ main {
 
 .card h3 {
   margin: 0 0 16px;
-  font-size: 13px;
-  color: var(--gold-soft);
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--olive-dark);
+  font-weight: 800;
+}
+
+/* editing state: إطار ذهبي حول البطاقة النشطة بالتعديل */
+.card.editing {
+  border-color: var(--gold);
+  box-shadow:
+    0 14px 40px rgba(25, 77, 65, 0.1),
+    0 0 0 1px rgba(203, 161, 53, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* ============ Category row ============ */
@@ -382,15 +471,15 @@ main {
   padding: 0 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
-  background: var(--glass-strong);
-  color: var(--gold-soft);
+  background: var(--cream-2);
+  color: var(--olive-dark);
   cursor: pointer;
   font-size: 14px;
   font-family: var(--font-body);
   transition: background 0.2s ease;
 }
 .cat-row button:hover {
-  background: rgba(232, 207, 138, 0.18);
+  background: var(--gold-soft);
 }
 
 /* ============ Image previews ============ */
@@ -405,6 +494,8 @@ main {
   border: 1px solid var(--glass-border-soft);
 }
 
+/* معاينة الصور المتعددة + الصور الموجودة (وضع التعديل) */
+.existing-single,
 .multi-preview {
   display: flex;
   flex-wrap: wrap;
@@ -424,9 +515,69 @@ main {
   width: 100%;
 }
 
+/* عنصر واحد بمعاينة الصور (فيه زر إزالة صغير) */
+.thumb-wrap {
+  position: relative;
+  width: 68px;
+  height: 68px;
+}
+.thumb-wrap img {
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border-soft);
+}
+.thumb-wrap .remove-x {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* معاينة الصورة الرئيسية بالأخبار (صورة + زر إزالة) */
+.main-preview-box {
+  position: relative;
+  margin-bottom: 14px;
+}
+.main-preview-box img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border-soft);
+  display: block;
+}
+.main-preview-box .remove-x {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(16, 53, 44, 0.75);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+}
+
 .upload-status {
   font-size: 13px;
-  color: var(--gold-soft);
+  color: var(--olive-dark);
   margin-bottom: 12px;
   min-height: 16px;
 }
@@ -447,7 +598,7 @@ main {
   object-fit: cover;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(25, 77, 65, 0.06);
   border: 1px solid var(--glass-border-soft);
 }
 
@@ -463,7 +614,7 @@ main {
   height: 68px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  background: rgba(232, 207, 138, 0.08);
+  background: rgba(203, 161, 53, 0.1);
   border: 1px dashed var(--glass-border);
   color: var(--muted);
   font-size: 10px;
@@ -489,16 +640,17 @@ main {
 .item-info .tag {
   display: inline-block;
   font-size: 11px;
-  background: rgba(232, 207, 138, 0.14);
-  color: var(--gold-soft);
+  background: var(--cream-2);
+  color: var(--olive-dark);
   border: 1px solid var(--glass-border-soft);
   padding: 3px 10px;
   border-radius: 999px;
   margin-bottom: 6px;
 }
 .item-info .main {
+  font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 2px 0;
   color: var(--ink);
 }
@@ -506,7 +658,7 @@ main {
   font-size: 13px;
   color: var(--muted);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .item-actions {
@@ -519,7 +671,7 @@ main {
   padding: 7px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border-soft);
-  background: var(--glass);
+  background: var(--white-soft);
   color: var(--muted);
   cursor: pointer;
   font-family: var(--font-body);
@@ -530,30 +682,33 @@ main {
 }
 .item-actions button.del {
   color: var(--danger);
-  border-color: rgba(209, 106, 76, 0.4);
+  border-color: rgba(181, 69, 43, 0.4);
 }
 .item-actions button.del:hover {
-  background: rgba(209, 106, 76, 0.15);
+  background: rgba(181, 69, 43, 0.1);
 }
 .item-actions button.edit {
-  color: var(--gold-soft);
+  color: var(--olive-dark);
   border-color: var(--glass-border);
 }
 .item-actions button.edit:hover {
-  background: rgba(232, 207, 138, 0.15);
+  background: var(--cream-2);
 }
 
 /* ============ Form actions row (submit + cancel) ============ */
-.form-actions {
+.form-actions,
+.btn-row {
   display: flex;
   gap: 10px;
 }
-.form-actions button.primary {
+.form-actions button.primary,
+.btn-row .primary {
   flex: 2;
 }
-button.secondary {
+button.secondary,
+button.ghost {
   flex: 1;
-  background: var(--glass);
+  background: var(--white-soft);
   color: var(--muted);
   border: 1px solid var(--glass-border-soft);
   padding: 13px 16px;
@@ -561,77 +716,45 @@ button.secondary {
   font-size: 14px;
   font-family: var(--font-body);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
-button.secondary:hover {
-  background: var(--glass-strong);
-}
-
-/* editing state highlight on the card */
-.card.editing {
-  border-color: var(--gold);
-  box-shadow:
-    0 14px 40px rgba(0, 0, 0, 0.32),
-    0 0 0 1px rgba(205, 165, 69, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+button.secondary:hover,
+button.ghost:hover {
+  background: var(--cream-2);
+  color: var(--olive-dark);
 }
 
-/* existing image thumbnails (edit mode) with remove buttons */
-.existing-single,
-.multi-preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.thumb-wrap {
-  position: relative;
-  width: 68px;
-  height: 68px;
-}
-.thumb-wrap img {
-  width: 68px;
-  height: 68px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border-soft);
-}
-.thumb-wrap .remove-x {
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--danger);
-  color: #fff;
-  border: none;
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
+/* ============ Categories list ============ */
+.cat-item,
+.category-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-/* categories list rows */
-.cat-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   padding: 12px 4px;
   border-bottom: 1px solid var(--glass-border-soft);
 }
-.cat-item:last-child {
+.cat-item {
+  justify-content: space-between;
+  gap: 10px;
+}
+.cat-item:last-child,
+.category-row:last-child {
   border-bottom: none;
 }
-.cat-item .cat-name {
+.cat-item .cat-name,
+.category-row .cat-name {
+  font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 800;
   color: var(--ink);
 }
-.cat-item .item-actions {
+.category-row .cat-name {
+  flex: 1;
+}
+.cat-item .item-actions,
+.category-row .item-actions {
   flex-direction: row;
 }
 
@@ -673,118 +796,4 @@ small.hint {
   * {
     transition: none !important;
   }
-}
-
-/* ============ إضافات: أزرار ثانوية وصفوف أزرار ============ */
-.btn-row {
-  display: flex;
-  gap: 10px;
-}
-.btn-row .primary {
-  flex: 2;
-}
-button.ghost {
-  flex: 1;
-  background: var(--glass);
-  border: 1px solid var(--glass-border-soft);
-  color: var(--muted);
-  padding: 13px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-button.ghost:hover {
-  background: var(--glass-strong);
-  color: var(--ink);
-}
-
-/* حالة التعديل: إطار ذهبي حول البطاقة النشطة بالتعديل */
-.card.editing {
-  border-color: var(--gold);
-  box-shadow:
-    0 14px 40px rgba(0, 0, 0, 0.32),
-    0 0 0 1px rgba(205, 165, 69, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-/* معاينة الصورة الرئيسية بالأخبار (تحتوي صورة + زر إزالة) */
-.main-preview-box {
-  position: relative;
-  margin-bottom: 14px;
-}
-.main-preview-box img {
-  width: 100%;
-  max-height: 220px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border-soft);
-  display: block;
-}
-.main-preview-box .remove-x {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(20, 22, 15, 0.75);
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  backdrop-filter: blur(4px);
-}
-
-/* عنصر واحد بمعاينة الصور المتعددة (فيه زر إزالة صغير) */
-.thumb-wrap {
-  position: relative;
-  width: 68px;
-  height: 68px;
-}
-.thumb-wrap img {
-  width: 68px;
-  height: 68px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border-soft);
-}
-.thumb-wrap .remove-x {
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: none;
-  background: var(--danger);
-  color: #fff;
-  cursor: pointer;
-  font-size: 11px;
-  line-height: 1;
-}
-
-/* قائمة التصنيفات */
-.category-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 4px;
-  border-bottom: 1px solid var(--glass-border-soft);
-}
-.category-row:last-child {
-  border-bottom: none;
-}
-.category-row .cat-name {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-}
-.category-row .item-actions {
-  flex-direction: row;
 }

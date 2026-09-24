@@ -39,6 +39,7 @@
         <button class="tab-btn active" data-tab="works">آخر الأعمال</button>
         <button class="tab-btn" data-tab="news">آخر الأخبار</button>
         <button class="tab-btn" data-tab="categories">التصنيفات</button>
+        <button class="tab-btn" data-tab="statistics">الإحصائيات</button>
       </div>
 
       <!-- تبويب آخر الأعمال -->
@@ -126,6 +127,41 @@
         <div class="card">
           <h3>التصنيفات الحالية</h3>
           <div id="categories-list"><p class="empty-msg">جاري التحميل...</p></div>
+        </div>
+      </div>
+
+      <!-- تبويب الإحصائيات -->
+      <div class="panel" id="panel-statistics">
+        <div class="card">
+          <h3 id="statistics-form-title">إضافة إحصائية جديدة</h3>
+          <form id="form-statistics">
+            <label>الاسم</label>
+            <input type="text" id="statistics-title" placeholder="مثال: عميل سعيد" required />
+
+            <label>الرقم</label>
+            <input type="number" id="statistics-value" placeholder="مثال: 250" step="any" required />
+
+            <label>اللاحقة</label>
+            <select id="statistics-suffix">
+              <option value="">بدون</option>
+              <option value="+">+ (علامة زائد)</option>
+              <option value="%">% (نسبة مئوية)</option>
+            </select>
+
+            <div class="upload-status" id="statistics-status"></div>
+
+            <div class="btn-row">
+              <button type="submit" class="primary" id="statistics-submit-btn">إضافة الإحصائية</button>
+              <button type="button" class="ghost" id="statistics-cancel-btn" style="display: none">
+                إلغاء التعديل
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>الإحصائيات المضافة</h3>
+          <div id="statistics-list"><p class="empty-msg">جاري التحميل...</p></div>
         </div>
       </div>
     </main>

@@ -1,5 +1,11 @@
 import { createNews, updateNews, deleteNews, subscribeToNews } from "./services/newsService.js";
 import { uploadOneToCloudinary, uploadManyToCloudinary } from "./image-upload.js";
+import {
+  showUploadOverlay,
+  setUploadOverlayText,
+  hideUploadOverlaySuccess,
+  hideUploadOverlayNow,
+} from "./uploadOverlay.js";
 
 // === DOM Elements ===
 const newsForm = document.getElementById("form-news");
@@ -94,16 +100,23 @@ newsForm.addEventListener("submit", async (e) => {
 
   newsSubmitBtn.disabled = true;
   newsSubmitBtn.textContent = editingNewsId ? "جاري الحفظ..." : "جاري النشر...";
+  showUploadOverlay("جاري الرفع...");
 
   try {
     let mainImage = newsMainExistingUrl;
     if (newsMainNewFile) {
       statusEl.textContent = "جاري رفع الصورة الرئيسية...";
+      setUploadOverlayText("جاري رفع الصورة الرئيسية...");
       mainImage = await uploadOneToCloudinary(newsMainNewFile, statusEl);
     }
 
+    if (newsSubNewFiles.length > 0) {
+      setUploadOverlayText(`جاري رفع ${newsSubNewFiles.length} صورة فرعية...`);
+    }
     const newSubUrls = await uploadManyToCloudinary(newsSubNewFiles, statusEl);
     const subImages = [...newsSubExistingUrls, ...newSubUrls];
+
+    setUploadOverlayText("جاري الحفظ...");
 
     const payload = {
       mainImage: mainImage || null,
@@ -118,11 +131,13 @@ newsForm.addEventListener("submit", async (e) => {
       await createNews(payload);
     }
 
+    hideUploadOverlaySuccess(editingNewsId ? "تم حفظ التعديل ✔" : "تم نشر الخبر ✔");
     resetNewsForm();
     statusEl.textContent = "";
   } catch (err) {
     console.error("News Form Submit Error:", err);
     statusEl.textContent = "صار خطأ، جرب مرة ثانية";
+    hideUploadOverlayNow();
   } finally {
     newsSubmitBtn.disabled = false;
     newsSubmitBtn.textContent = editingNewsId ? "حفظ التعديل" : "نشر الخبر";

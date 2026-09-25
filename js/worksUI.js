@@ -1,6 +1,12 @@
 import { createWork, updateWork, deleteWork, subscribeToWorks } from "./services/worksService.js";
 import { uploadOneToCloudinary } from "./image-upload.js";
 import { categorySelect } from "./categoriesUI.js";
+import {
+  showUploadOverlay,
+  setUploadOverlayText,
+  hideUploadOverlaySuccess,
+  hideUploadOverlayNow,
+} from "./uploadOverlay.js";
 
 // === DOM Elements ===
 const worksForm = document.getElementById("form-works");
@@ -43,6 +49,7 @@ worksForm.addEventListener("submit", async (e) => {
 
   worksSubmitBtn.disabled = true;
   worksSubmitBtn.textContent = editingWorkId ? "جاري الحفظ..." : "جاري الإضافة...";
+  showUploadOverlay(file ? "جاري رفع الصورة..." : "جاري الحفظ...");
 
   try {
     let imgUrl = editingWorkImage;
@@ -51,6 +58,8 @@ worksForm.addEventListener("submit", async (e) => {
       imgUrl = await uploadOneToCloudinary(file, statusEl);
       statusEl.textContent = "تم رفع الصورة ✔";
     }
+
+    setUploadOverlayText("جاري الحفظ...");
 
     const payload = {
       img: imgUrl,
@@ -65,11 +74,13 @@ worksForm.addEventListener("submit", async (e) => {
       await createWork(payload);
     }
 
+    hideUploadOverlaySuccess(editingWorkId ? "تم حفظ التعديل ✔" : "تمت إضافة العمل ✔");
     resetWorksForm();
     statusEl.textContent = "";
   } catch (err) {
     console.error("Works Form Submit Error:", err);
     statusEl.textContent = "صار خطأ، جرب مرة ثانية";
+    hideUploadOverlayNow();
   } finally {
     worksSubmitBtn.disabled = false;
     worksSubmitBtn.textContent = editingWorkId ? "حفظ التعديل" : "إضافة العمل";

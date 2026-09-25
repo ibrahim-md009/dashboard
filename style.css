@@ -797,3 +797,157 @@ small.hint {
     transition: none !important;
   }
 }
+
+/* ============================================
+   أنيميشن شاشة الرفع/الحفظ (upload-overlay)
+   نفس توكنز الهوية أعلاه (--gold, --olive-dark, --glass...)
+   ============================================ */
+.upload-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 53, 44, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 999;
+}
+.upload-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.upload-overlay-box {
+  background: var(--glass);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 38px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  min-width: 220px;
+  box-shadow:
+    0 20px 60px rgba(25, 77, 65, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* الشعار الدوّار */
+.upload-spinner {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  background: conic-gradient(
+    from 0deg,
+    var(--gold) 0 10deg,
+    transparent 10deg 40deg,
+    var(--gold) 40deg 50deg,
+    transparent 50deg 80deg,
+    var(--gold) 80deg 90deg,
+    transparent 90deg 120deg,
+    var(--gold) 120deg 130deg,
+    transparent 130deg 160deg,
+    var(--gold) 160deg 170deg,
+    transparent 170deg 200deg,
+    var(--gold) 200deg 210deg,
+    transparent 210deg 240deg,
+    var(--gold) 240deg 250deg,
+    transparent 250deg 280deg,
+    var(--gold) 280deg 290deg,
+    transparent 290deg 320deg,
+    var(--gold) 320deg 330deg,
+    transparent 330deg 360deg
+  );
+  box-shadow: 0 0 22px rgba(203, 161, 53, 0.45);
+  animation: upload-spin 1.4s linear infinite;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-spinner-logo {
+  position: absolute;
+  inset: 15px;
+  border-radius: 50%;
+  background: var(--olive-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* الشعار بيلف بعكس اتجاه الحلقة الذهبية حتى يضل واقف بدون دوران */
+  animation: upload-counter-spin 1.4s linear infinite;
+}
+.upload-spinner-logo img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+/* لو الشعار ما انلقى (مسار الصورة غلط)، بيرجع لعدسة بسيطة بدل ما يضل فاضي */
+.upload-spinner-logo.no-logo::after {
+  content: "";
+  width: 55%;
+  height: 55%;
+  border-radius: 50%;
+  border: 2px solid var(--gold-soft);
+}
+
+@keyframes upload-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes upload-counter-spin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.upload-success-check {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(203, 161, 53, 0.14);
+  border: 2px solid var(--gold);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--olive-dark);
+}
+
+.upload-overlay-text {
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 600;
+  min-height: 20px;
+  text-align: center;
+}
+
+.upload-progress-track {
+  width: 160px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(25, 77, 65, 0.12);
+  overflow: hidden;
+}
+.upload-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-soft), var(--gold));
+  transition: width 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-spinner,
+  .upload-spinner-logo {
+    animation: none;
+  }
+}

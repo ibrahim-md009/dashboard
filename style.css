@@ -123,6 +123,10 @@ body {
   background-repeat: no-repeat;
 }
 
+a {
+  text-decoration: none;
+}
+
 ::selection {
   background: rgba(203, 161, 53, 0.4);
   color: var(--charcoal);

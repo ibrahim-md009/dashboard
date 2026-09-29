@@ -920,9 +920,11 @@ button.ghost:hover {
 .cat-item,
 .category-row {
   display: flex;
+  width: 100%;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
-  padding: 9px 8px 9px 14px;
+  padding: 9px 14px;
   border: 1px solid var(--glass-border-soft);
   border-radius: 999px;
   background: var(--white-soft);

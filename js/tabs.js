@@ -1,6 +1,7 @@
 // ====== تبديل التبويبات (شريط سفلي) + السحب بين الأقسام على الموبايل ======
 const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const panelsViewport = document.getElementById("panels-viewport");
+const tabsBar = document.querySelector(".tabs");
 const tabOrder = tabButtons.map((b) => b.dataset.tab);
 
 function activateTab(tabName, { animateDir = null } = {}) {
@@ -26,13 +27,35 @@ tabButtons.forEach((btn) => {
   btn.addEventListener("click", () => activateTab(btn.dataset.tab));
 });
 
-// ---------- السحب (Swipe) بالموبايل بين الأقسام ----------
-if (panelsViewport) {
+function goToNextTab() {
+  const activeBtn = tabButtons.find((b) => b.classList.contains("active"));
+  const currentIndex = tabOrder.indexOf(activeBtn?.dataset.tab);
+  if (currentIndex === -1) return;
+  const next = tabOrder[currentIndex + 1];
+  if (next) activateTab(next, { animateDir: "next" });
+}
+
+function goToPrevTab() {
+  const activeBtn = tabButtons.find((b) => b.classList.contains("active"));
+  const currentIndex = tabOrder.indexOf(activeBtn?.dataset.tab);
+  if (currentIndex === -1) return;
+  const prev = tabOrder[currentIndex - 1];
+  if (prev) activateTab(prev, { animateDir: "prev" });
+}
+
+/**
+ * تفعيل السحب (Swipe) الأفقي على عنصر معيّن للتنقل بين التبويبات،
+ * بنفس روح تيليجرام بالآيفون: تسحب على شريط التبويبات نفسه أو على
+ * منطقة المحتوى، وبينتقل. `ignoreVertical` بيتجاهل السحب لو كان
+ * عمودي أكتر منه أفقي (يعني المستخدم بيسكرول عادي مش بيبدّل تبويب).
+ */
+function bindSwipe(el, { minDistance = 40, ignoreVertical = true } = {}) {
+  if (!el) return;
   let startX = 0;
   let startY = 0;
   let tracking = false;
 
-  panelsViewport.addEventListener(
+  el.addEventListener(
     "touchstart",
     (e) => {
       if (e.touches.length !== 1) return;
@@ -43,7 +66,7 @@ if (panelsViewport) {
     { passive: true },
   );
 
-  panelsViewport.addEventListener(
+  el.addEventListener(
     "touchend",
     (e) => {
       if (!tracking) return;
@@ -54,23 +77,19 @@ if (panelsViewport) {
       const deltaX = endX - startX;
       const deltaY = endY - startY;
 
-      // نتجاهل الحركة العمودية (سكرول عادي) أو أي سحب قصير جداً
-      if (Math.abs(deltaX) < 55 || Math.abs(deltaX) < Math.abs(deltaY) * 1.3) return;
+      if (Math.abs(deltaX) < minDistance) return;
+      if (ignoreVertical && Math.abs(deltaX) < Math.abs(deltaY) * 1.3) return;
 
-      const activeBtn = tabButtons.find((b) => b.classList.contains("active"));
-      const currentIndex = tabOrder.indexOf(activeBtn?.dataset.tab);
-      if (currentIndex === -1) return;
-
-      if (deltaX < 0) {
-        // سحب لليسار → القسم التالي
-        const next = tabOrder[currentIndex + 1];
-        if (next) activateTab(next, { animateDir: "next" });
-      } else {
-        // سحب لليمين → القسم السابق
-        const prev = tabOrder[currentIndex - 1];
-        if (prev) activateTab(prev, { animateDir: "prev" });
-      }
+      if (deltaX < 0) goToNextTab(); // سحب لليسار → التبويب التالي
+      else goToPrevTab(); // سحب لليمين → التبويب السابق
     },
     { passive: true },
   );
 }
+
+// السحب على منطقة المحتوى (البطاقات)
+bindSwipe(panelsViewport, { minDistance: 55, ignoreVertical: true });
+
+// السحب على الشريط السفلي نفسه (زي تيليجرام بالآيفون) — مسافة أقصر
+// لأن الشريط أصلاً عرضه محدود وما فيه سكرول عمودي نتجنبه
+bindSwipe(tabsBar, { minDistance: 30, ignoreVertical: false });

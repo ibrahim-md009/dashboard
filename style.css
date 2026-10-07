@@ -418,6 +418,15 @@ main {
 /* منطقة البانلات: تُلتقط منها حركة السحب (touch) بين الأقسام */
 .panels-viewport {
   touch-action: pan-y;
+  /* أنيميشن دخول التبويب بيزحلق البانل ±28px أفقياً. بصفحة RTL الزحلقة لليسار بتصير "تمرير أفقي" للصفحة،
+     فكروم بالموبايل بيوسّع الـ layout viewport لحظياً والشريط السفلي (fixed) بيتمطّط ويتزحزح. clip بيمنع إضافة أي overflow. */
+  overflow-x: clip;
+  overflow-clip-margin: 12px; /* أقل من padding الـ main (14px) عشان الظل يبقى ظاهر */
+}
+@supports not (overflow: clip) {
+  .panels-viewport {
+    overflow-x: hidden;
+  }
 }
 
 .panel {

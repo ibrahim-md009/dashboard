@@ -1,5 +1,6 @@
 import { createWork, updateWork, deleteWork, subscribeToWorks } from "./services/worksService.js";
 import { uploadOneToCloudinary } from "./image-upload.js";
+import { thumbUrl } from "./imageUrl.js";
 import { categorySelect } from "./categoriesUI.js";
 import {
   showUploadOverlay,
@@ -20,12 +21,15 @@ const worksCard = worksForm.closest(".card");
 // === State ===
 let editingWorkId = null;
 let editingWorkImage = null;
+let worksPreviewObjectUrl = null;
 
 // === Event Listeners ===
 worksFileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) {
-    worksPreview.src = URL.createObjectURL(file);
+    if (worksPreviewObjectUrl) URL.revokeObjectURL(worksPreviewObjectUrl);
+    worksPreviewObjectUrl = URL.createObjectURL(file);
+    worksPreview.src = worksPreviewObjectUrl;
     worksPreview.style.display = "block";
   } else if (editingWorkImage) {
     worksPreview.src = editingWorkImage;
@@ -89,20 +93,21 @@ worksForm.addEventListener("submit", async (e) => {
 
 // === Functions ===
 
+// بترجّع دالة إلغاء الاشتراك (unsubscribe) عشان auth.js يوقف الـ listener عند الخروج
 export function listenWorks() {
-  subscribeToWorks((works) => {
+  return subscribeToWorks((works) => {
     const list = document.getElementById("works-list");
     if (!works.length) {
       list.innerHTML = '<p class="empty-msg">لسا ما في أعمال مضافة</p>';
       return;
     }
 
-    list.innerHTML = "";
+    const frag = document.createDocumentFragment();
     works.forEach((item) => {
       const row = document.createElement("div");
       row.className = "item";
       row.innerHTML = `
-        <img src="${item.img}" alt="">
+        <img src="${thumbUrl(item.img)}" alt="" loading="lazy" decoding="async" width="68" height="68">
         <div class="item-info">
           <span class="tag">${item.category || ""}</span>
           <p class="main">${item.title || ""}</p>
@@ -120,8 +125,9 @@ export function listenWorks() {
         }
       });
 
-      list.appendChild(row);
+      frag.appendChild(row);
     });
+    list.replaceChildren(frag);
   });
 }
 

@@ -1,5 +1,6 @@
 import { createNews, updateNews, deleteNews, subscribeToNews } from "./services/newsService.js";
 import { uploadOneToCloudinary, uploadManyToCloudinary } from "./image-upload.js";
+import { thumbUrl } from "./imageUrl.js";
 import {
   showUploadOverlay,
   setUploadOverlayText,
@@ -25,16 +26,39 @@ let newsMainNewFile = null;
 let newsSubExistingUrls = [];
 let newsSubNewFiles = [];
 
+// === Object URLs: رابط واحد لكل ملف + تحريره لما ما نحتاجه (كان بيتولّد رابط جديد بكل رسم وما بيتحرر) ===
+const objectUrls = new Map();
+function previewUrl(file) {
+  let u = objectUrls.get(file);
+  if (!u) {
+    u = URL.createObjectURL(file);
+    objectUrls.set(file, u);
+  }
+  return u;
+}
+function releaseUrl(file) {
+  const u = objectUrls.get(file);
+  if (u) {
+    URL.revokeObjectURL(u);
+    objectUrls.delete(file);
+  }
+}
+function releaseAllUrls() {
+  objectUrls.forEach((u) => URL.revokeObjectURL(u));
+  objectUrls.clear();
+}
+
 // === Preview Functions ===
 function renderNewsMainPreview() {
   newsMainPreviewWrap.innerHTML = "";
-  const url = newsMainNewFile ? URL.createObjectURL(newsMainNewFile) : newsMainExistingUrl;
+  const url = newsMainNewFile ? previewUrl(newsMainNewFile) : newsMainExistingUrl;
   if (!url) return;
 
   const box = document.createElement("div");
   box.className = "main-preview-box";
-  box.innerHTML = `<img src="${url}" alt=""><button type="button" class="remove-x" title="إزالة">✕</button>`;
+  box.innerHTML = `<img src="${url}" alt="" decoding="async"><button type="button" class="remove-x" title="إزالة">✕</button>`;
   box.querySelector(".remove-x").addEventListener("click", () => {
+    if (newsMainNewFile) releaseUrl(newsMainNewFile);
     newsMainNewFile = null;
     newsMainExistingUrl = null;
     newsMainFileInput.value = "";
@@ -56,7 +80,7 @@ function renderNewsSubPreview() {
   newsSubExistingUrls.forEach((url, idx) => {
     const wrap = document.createElement("div");
     wrap.className = "thumb-wrap";
-    wrap.innerHTML = `<img src="${url}" alt=""><button type="button" class="remove-x">✕</button>`;
+    wrap.innerHTML = `<img src="${thumbUrl(url)}" alt="" loading="lazy" decoding="async"><button type="button" class="remove-x">✕</button>`;
     wrap.querySelector(".remove-x").addEventListener("click", () => {
       newsSubExistingUrls.splice(idx, 1);
       renderNewsSubPreview();
@@ -67,8 +91,9 @@ function renderNewsSubPreview() {
   newsSubNewFiles.forEach((file, idx) => {
     const wrap = document.createElement("div");
     wrap.className = "thumb-wrap";
-    wrap.innerHTML = `<img src="${URL.createObjectURL(file)}" alt=""><button type="button" class="remove-x">✕</button>`;
+    wrap.innerHTML = `<img src="${previewUrl(file)}" alt="" decoding="async"><button type="button" class="remove-x">✕</button>`;
     wrap.querySelector(".remove-x").addEventListener("click", () => {
+      releaseUrl(file);
       newsSubNewFiles.splice(idx, 1);
       renderNewsSubPreview();
     });
@@ -80,6 +105,7 @@ function renderNewsSubPreview() {
 newsMainFileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (file) {
+    if (newsMainNewFile) releaseUrl(newsMainNewFile);
     newsMainNewFile = file;
     renderNewsMainPreview();
   }
@@ -145,20 +171,26 @@ newsForm.addEventListener("submit", async (e) => {
 });
 
 // === Main Module Functions ===
+// بترجّع دالة إلغاء الاشتراك (unsubscribe) عشان auth.js يوقف الـ listener عند الخروج بدل ما يتراكموا
 export function listenNews() {
-  subscribeToNews((newsList) => {
+  return subscribeToNews((newsList) => {
     const list = document.getElementById("news-list");
     if (!newsList.length) {
       list.innerHTML = '<p class="empty-msg">لسا ما في أخبار منشورة</p>';
       return;
     }
 
-    list.innerHTML = "";
+    // نبني كل العناصر بالذاكرة أول، وبعدين نحطها بالصفحة بعملية واحدة (بدل reflow لكل عنصر)
+    const frag = document.createDocumentFragment();
     newsList.forEach((item) => {
       const mainImage = item.mainImage || item.imageUrl || null;
       const subImages = item.subImages || item.images || [];
-      const mainImgHtml = mainImage ? `<img src="${mainImage}" alt="">` : `<div class="no-img">بدون صورة رئيسية</div>`;
-      const subImagesHtml = subImages.map((url) => `<img src="${url}" alt="">`).join("");
+      const mainImgHtml = mainImage
+        ? `<img src="${thumbUrl(mainImage)}" alt="" loading="lazy" decoding="async" width="68" height="68">`
+        : `<div class="no-img">بدون صورة رئيسية</div>`;
+      const subImagesHtml = subImages
+        .map((url) => `<img src="${thumbUrl(url)}" alt="" loading="lazy" decoding="async" width="68" height="68">`)
+        .join("");
 
       const row = document.createElement("div");
       row.className = "item";
@@ -183,12 +215,14 @@ export function listenNews() {
         }
       });
 
-      list.appendChild(row);
+      frag.appendChild(row);
     });
+    list.replaceChildren(frag);
   });
 }
 
 function startEditNews(id, item) {
+  releaseAllUrls();
   editingNewsId = id;
   newsMainExistingUrl = item.mainImage || item.imageUrl || null;
   newsMainNewFile = null;
@@ -209,6 +243,7 @@ function startEditNews(id, item) {
 }
 
 function resetNewsForm() {
+  releaseAllUrls();
   editingNewsId = null;
   newsMainExistingUrl = null;
   newsMainNewFile = null;

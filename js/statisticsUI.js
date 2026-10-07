@@ -63,7 +63,7 @@ statsForm.addEventListener("submit", async (e) => {
 // === Functions ===
 
 export function listenStatistics() {
-  subscribeToStatistics((stats) => {
+  return subscribeToStatistics((stats) => {
     const list = document.getElementById("statistics-list");
 
     if (!stats.length) {

@@ -1,0 +1,11 @@
+// ====== نسخة مصغّرة من صور Cloudinary للقوائم ======
+// القوائم بتعرض الصور بحجم 68px، فما في داعي نحمّل ونفك صورة 1800px لكل خانة.
+// Cloudinary بيعطينا نسخة مقصوصة وخفيفة (WebP/AVIF تلقائياً) بمجرد إضافة تحويل للرابط.
+// أي رابط مو من Cloudinary (أو ما إلو الشكل المعروف) بيرجع كما هو بدون تغيير.
+export function thumbUrl(url, size = 136) {
+  if (!url || typeof url !== "string") return url;
+  return url.replace(
+    /(res\.cloudinary\.com\/[^/]+\/image\/upload\/)(v\d+\/)/,
+    `$1c_fill,w_${size},h_${size},q_auto,f_auto/$2`,
+  );
+}

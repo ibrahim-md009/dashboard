@@ -46,16 +46,28 @@ document.getElementById("login-pass").addEventListener("keydown", (e) => {
 
 logoutBtn.addEventListener("click", () => signOut(auth));
 
+// دوال إلغاء الاشتراك: بنوقف الـ listeners عند الخروج، وما بنكرر تشغيلها لو الحدث انعاد
+let unsubscribers = [];
+function stopListeners() {
+  unsubscribers.forEach((unsub) => {
+    try {
+      if (typeof unsub === "function") unsub();
+    } catch {
+      /* ignore */
+    }
+  });
+  unsubscribers = [];
+}
+
 onAuthStateChanged(auth, (user) => {
   if (user) {
     loginScreen.style.display = "none";
     dashboard.style.display = "block";
     logoutBtn.style.display = "inline-block";
-    listenCategories();
-    listenWorks();
-    listenNews();
-    listenStatistics();
+    stopListeners(); // أمان: ما نخلي اشتراكات قديمة تتراكم فوق الجديدة
+    unsubscribers = [listenCategories(), listenWorks(), listenNews(), listenStatistics()];
   } else {
+    stopListeners();
     loginScreen.style.display = "block";
     dashboard.style.display = "none";
     logoutBtn.style.display = "none";

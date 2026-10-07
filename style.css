@@ -586,9 +586,9 @@ main {
 /* ============ Cards with viewfinder corners ============ */
 .card {
   position: relative;
-  background: var(--glass);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  /* ملاحظة أداء: شلنا backdrop-filter من البطاقات — كان بيعيد حساب البلور على كل بطاقة وكل فريم
+     أثناء أنيميشن تبديل التبويب وأثناء التمرير، وهو سبب التعليق. الخلفية شبه معتمة فالشكل ما بيتغيّر تقريباً. */
+  background: rgba(255, 252, 242, 0.9);
   border: 1px solid var(--glass-border-soft);
   border-radius: var(--radius-lg);
   padding: 22px 20px;
@@ -768,6 +768,9 @@ main {
 
 /* ============ Item rows (lists) ============ */
 .item {
+  /* الصفوف خارج الشاشة ما بينرسموا إلا لما تقرب (بيخفف الحمل مع القوائم الطويلة) */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
   display: flex;
   gap: 14px;
   padding: 14px 4px;

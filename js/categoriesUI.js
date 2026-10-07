@@ -41,7 +41,7 @@ categoryForm.addEventListener("submit", async (e) => {
 // === Main Module Functions ===
 
 export function listenCategories() {
-  subscribeToCategories((categories) => {
+  return subscribeToCategories((categories) => {
     // 1. تحديث قائمة الاختيار بفورم الأعمال (works.js)
     categorySelect.innerHTML = "";
     if (!categories.length) {

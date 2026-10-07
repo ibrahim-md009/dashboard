@@ -9,3 +9,12 @@ export function thumbUrl(url, size = 136) {
     `$1c_fill,w_${size},h_${size},q_auto,f_auto/$2`,
   );
 }
+
+// نسخة متوسطة (عرض أقصى 800px، بدون قص) لمعاينة الصورة الكبيرة داخل الفورم
+export function mediumUrl(url, width = 800) {
+  if (!url || typeof url !== "string") return url;
+  return url.replace(
+    /(res\.cloudinary\.com\/[^/]+\/image\/upload\/)(v\d+\/)/,
+    `$1c_limit,w_${width},q_auto,f_auto/$2`,
+  );
+}

@@ -1,6 +1,6 @@
 import { createNews, updateNews, deleteNews, subscribeToNews } from "./services/newsService.js";
 import { uploadOneToCloudinary, uploadManyToCloudinary } from "./image-upload.js";
-import { thumbUrl } from "./imageUrl.js";
+import { thumbUrl, mediumUrl } from "./imageUrl.js";
 import {
   showUploadOverlay,
   setUploadOverlayText,
@@ -51,7 +51,7 @@ function releaseAllUrls() {
 // === Preview Functions ===
 function renderNewsMainPreview() {
   newsMainPreviewWrap.innerHTML = "";
-  const url = newsMainNewFile ? previewUrl(newsMainNewFile) : newsMainExistingUrl;
+  const url = newsMainNewFile ? previewUrl(newsMainNewFile) : mediumUrl(newsMainExistingUrl);
   if (!url) return;
 
   const box = document.createElement("div");
@@ -239,7 +239,7 @@ function startEditNews(id, item) {
   newsFormTitle.textContent = "تعديل خبر";
   newsCancelBtn.style.display = "inline-block";
   newsCard.classList.add("editing");
-  newsCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  requestAnimationFrame(() => newsCard.scrollIntoView({ behavior: "smooth", block: "start" }));
 }
 
 function resetNewsForm() {

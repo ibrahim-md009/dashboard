@@ -379,6 +379,19 @@ if (tabsBar && tabButtons.length) {
 /* ============================================================
    السحب الأفقي على منطقة المحتوى للتنقل بين التبويبات
    ============================================================ */
+// هل بدأ اللمس داخل عنصر بيتمرّر أفقياً (زي شريط صور الأخبار) أو حقل إدخال؟ — بهالحالة السحب إله مو للتنقل بين التبويبات
+function startsInNoSwipeZone(target, boundary) {
+  if (!target || !target.closest) return false;
+  if (target.closest(".item-images, [data-no-swipe], input, textarea, select")) return true;
+  for (let n = target; n && n !== boundary; n = n.parentElement) {
+    if (n.scrollWidth > n.clientWidth + 1) {
+      const ox = getComputedStyle(n).overflowX;
+      if (ox === "auto" || ox === "scroll") return true;
+    }
+  }
+  return false;
+}
+
 function bindSwipe(el, { minDistance = 40, ignoreVertical = true } = {}) {
   if (!el) return;
   let startX = 0;
@@ -389,6 +402,10 @@ function bindSwipe(el, { minDistance = 40, ignoreVertical = true } = {}) {
     "touchstart",
     (e) => {
       if (e.touches.length !== 1) return;
+      if (startsInNoSwipeZone(e.target, el)) {
+        tracking = false;
+        return;
+      }
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       tracking = true;

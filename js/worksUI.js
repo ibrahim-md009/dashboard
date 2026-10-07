@@ -1,6 +1,6 @@
 import { createWork, updateWork, deleteWork, subscribeToWorks } from "./services/worksService.js";
 import { uploadOneToCloudinary } from "./image-upload.js";
-import { thumbUrl } from "./imageUrl.js";
+import { thumbUrl, mediumUrl } from "./imageUrl.js";
 import { categorySelect } from "./categoriesUI.js";
 import {
   showUploadOverlay,
@@ -32,7 +32,7 @@ worksFileInput.addEventListener("change", (e) => {
     worksPreview.src = worksPreviewObjectUrl;
     worksPreview.style.display = "block";
   } else if (editingWorkImage) {
-    worksPreview.src = editingWorkImage;
+    worksPreview.src = mediumUrl(editingWorkImage);
     worksPreview.style.display = "block";
   } else {
     worksPreview.style.display = "none";
@@ -137,7 +137,7 @@ function startEditWork(id, item) {
   worksFileInput.required = false;
   worksFileInput.value = "";
   if (editingWorkImage) {
-    worksPreview.src = editingWorkImage;
+    worksPreview.src = mediumUrl(editingWorkImage);
     worksPreview.style.display = "block";
   }
   categorySelect.value = item.category || "";
@@ -147,7 +147,7 @@ function startEditWork(id, item) {
   worksFormTitle.textContent = "تعديل عمل";
   worksCancelBtn.style.display = "inline-block";
   worksCard.classList.add("editing");
-  worksCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  requestAnimationFrame(() => worksCard.scrollIntoView({ behavior: "smooth", block: "start" }));
 }
 
 function resetWorksForm() {

@@ -585,6 +585,7 @@ main {
 
 /* ============ Cards with viewfinder corners ============ */
 .card {
+  scroll-margin-top: 92px; /* عشان الهيدر الثابت ما يغطّي أول البطاقة بعد scrollIntoView */
   position: relative;
   /* ملاحظة أداء: شلنا backdrop-filter من البطاقات — كان بيعيد حساب البلور على كل بطاقة وكل فريم
      أثناء أنيميشن تبديل التبويب وأثناء التمرير، وهو سبب التعليق. الخلفية شبه معتمة فالشكل ما بيتغيّر تقريباً. */
@@ -768,9 +769,6 @@ main {
 
 /* ============ Item rows (lists) ============ */
 .item {
-  /* الصفوف خارج الشاشة ما بينرسموا إلا لما تقرب (بيخفف الحمل مع القوائم الطويلة) */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 96px;
   display: flex;
   gap: 14px;
   padding: 14px 4px;
@@ -795,6 +793,9 @@ main {
   flex-shrink: 0;
   overflow-x: auto;
   max-width: 160px;
+  /* السحب جوّا شريط الصور يبقى جوّاه (ما بيمرّر للصفحة ولا بيبدّل التبويب) */
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .item-images .no-img {
   width: 68px;
@@ -854,6 +855,8 @@ main {
   gap: 6px;
 }
 .item-actions button {
+  touch-action: manipulation; /* بدون تأخير/تكبير مزدوج عند الضغط */
+  -webkit-tap-highlight-color: transparent;
   font-size: 12px;
   padding: 7px 12px;
   border-radius: var(--radius-sm);

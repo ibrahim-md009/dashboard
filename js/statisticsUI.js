@@ -123,7 +123,7 @@ function startEditStat(item) {
   statsFormTitle.textContent = "تعديل إحصائية";
   statsCancelBtn.style.display = "inline-block";
   statsCard.classList.add("editing");
-  statsCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  requestAnimationFrame(() => statsCard.scrollIntoView({ behavior: "smooth", block: "start" }));
 }
 
 function resetStatsForm() {

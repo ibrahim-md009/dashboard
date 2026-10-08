@@ -1,5 +1,5 @@
 import { createWork, updateWork, deleteWork, subscribeToWorks } from "./services/worksService.js";
-import { uploadOneToCloudinary } from "./image-upload.js";
+import { uploadOneToCloudinary, uploadManyToCloudinary } from "./image-upload.js";
 import { thumbUrl, mediumUrl } from "./imageUrl.js";
 import { categorySelect } from "./categoriesUI.js";
 import {
@@ -13,6 +13,8 @@ import {
 const worksForm = document.getElementById("form-works");
 const worksFileInput = document.getElementById("works-file");
 const worksPreview = document.getElementById("works-preview");
+const worksSubFilesInput = document.getElementById("works-sub-files"); // جديد: <input type="file" multiple>
+const worksSubPreview = document.getElementById("works-sub-preview"); // جديد: div للمعاينة
 const worksSubmitBtn = document.getElementById("works-submit-btn");
 const worksCancelBtn = document.getElementById("works-cancel-btn");
 const worksFormTitle = document.getElementById("works-form-title");
@@ -22,6 +24,65 @@ const worksCard = worksForm.closest(".card");
 let editingWorkId = null;
 let editingWorkImage = null;
 let worksPreviewObjectUrl = null;
+let worksSubExistingUrls = [];
+let worksSubNewFiles = [];
+
+// === Object URLs للصور الفرعية: رابط واحد لكل ملف + تحريره عند عدم الحاجة ===
+const objectUrls = new Map();
+function previewUrl(file) {
+  let u = objectUrls.get(file);
+  if (!u) {
+    u = URL.createObjectURL(file);
+    objectUrls.set(file, u);
+  }
+  return u;
+}
+function releaseUrl(file) {
+  const u = objectUrls.get(file);
+  if (u) {
+    URL.revokeObjectURL(u);
+    objectUrls.delete(file);
+  }
+}
+function releaseAllUrls() {
+  objectUrls.forEach((u) => URL.revokeObjectURL(u));
+  objectUrls.clear();
+}
+
+// === Sub images preview ===
+function renderWorksSubPreview() {
+  worksSubPreview.innerHTML = "";
+  const total = worksSubExistingUrls.length + worksSubNewFiles.length;
+  if (total === 0) return;
+
+  const badge = document.createElement("div");
+  badge.className = "count-badge";
+  badge.textContent = `${total} صورة فرعية`;
+  worksSubPreview.appendChild(badge);
+
+  worksSubExistingUrls.forEach((url, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "thumb-wrap";
+    wrap.innerHTML = `<img src="${thumbUrl(url)}" alt="" loading="lazy" decoding="async"><button type="button" class="remove-x">✕</button>`;
+    wrap.querySelector(".remove-x").addEventListener("click", () => {
+      worksSubExistingUrls.splice(idx, 1);
+      renderWorksSubPreview();
+    });
+    worksSubPreview.appendChild(wrap);
+  });
+
+  worksSubNewFiles.forEach((file, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "thumb-wrap";
+    wrap.innerHTML = `<img src="${previewUrl(file)}" alt="" decoding="async"><button type="button" class="remove-x">✕</button>`;
+    wrap.querySelector(".remove-x").addEventListener("click", () => {
+      releaseUrl(file);
+      worksSubNewFiles.splice(idx, 1);
+      renderWorksSubPreview();
+    });
+    worksSubPreview.appendChild(wrap);
+  });
+}
 
 // === Event Listeners ===
 worksFileInput.addEventListener("change", (e) => {
@@ -37,6 +98,13 @@ worksFileInput.addEventListener("change", (e) => {
   } else {
     worksPreview.style.display = "none";
   }
+});
+
+// اختيار عدة صور فرعية مرة واحدة (ويمكن الإضافة على اختيار سابق)
+worksSubFilesInput.addEventListener("change", (e) => {
+  worksSubNewFiles.push(...Array.from(e.target.files));
+  worksSubFilesInput.value = "";
+  renderWorksSubPreview();
 });
 
 worksCancelBtn.addEventListener("click", resetWorksForm);
@@ -63,10 +131,17 @@ worksForm.addEventListener("submit", async (e) => {
       statusEl.textContent = "تم رفع الصورة ✔";
     }
 
+    if (worksSubNewFiles.length > 0) {
+      setUploadOverlayText(`جاري رفع ${worksSubNewFiles.length} صورة فرعية...`);
+    }
+    const newSubUrls = await uploadManyToCloudinary(worksSubNewFiles, statusEl);
+    const subImages = [...worksSubExistingUrls, ...newSubUrls];
+
     setUploadOverlayText("جاري الحفظ...");
 
     const payload = {
       img: imgUrl,
+      subImages,
       category: categorySelect.value,
       title: document.getElementById("works-main").value.trim(),
       sub: document.getElementById("works-sub").value.trim(),
@@ -104,6 +179,7 @@ export function listenWorks() {
 
     const frag = document.createDocumentFragment();
     works.forEach((item) => {
+      const subCount = (item.subImages || []).length;
       const row = document.createElement("div");
       row.className = "item";
       row.innerHTML = `
@@ -112,6 +188,7 @@ export function listenWorks() {
           <span class="tag">${item.category || ""}</span>
           <p class="main">${item.title || ""}</p>
           <p class="sub">${item.sub || ""}</p>
+          ${subCount ? `<p class="sub">${subCount + 1} صور</p>` : ""}
         </div>
         <div class="item-actions">
           <button class="edit">تعديل</button>
@@ -132,14 +209,18 @@ export function listenWorks() {
 }
 
 function startEditWork(id, item) {
+  releaseAllUrls();
   editingWorkId = id;
   editingWorkImage = item.img || null;
+  worksSubExistingUrls = [...(item.subImages || [])];
+  worksSubNewFiles = [];
   worksFileInput.required = false;
   worksFileInput.value = "";
   if (editingWorkImage) {
     worksPreview.src = mediumUrl(editingWorkImage);
     worksPreview.style.display = "block";
   }
+  renderWorksSubPreview();
   categorySelect.value = item.category || "";
   document.getElementById("works-main").value = item.title || "";
   document.getElementById("works-sub").value = item.sub || "";
@@ -151,10 +232,14 @@ function startEditWork(id, item) {
 }
 
 function resetWorksForm() {
+  releaseAllUrls();
   editingWorkId = null;
   editingWorkImage = null;
+  worksSubExistingUrls = [];
+  worksSubNewFiles = [];
   worksForm.reset();
   worksPreview.style.display = "none";
+  worksSubPreview.innerHTML = "";
   worksFileInput.required = true;
   worksSubmitBtn.textContent = "إضافة العمل";
   worksFormTitle.textContent = "إضافة عمل جديد";

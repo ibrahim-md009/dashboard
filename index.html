@@ -64,128 +64,134 @@
     <!-- الداش بورد -->
     <main id="dashboard">
       <div class="panels-viewport" id="panels-viewport">
-      <!-- تبويب آخر الأعمال -->
-      <div class="panel active" id="panel-works">
-        <div class="card">
-          <h3 id="works-form-title">إضافة عمل جديد</h3>
-          <form id="form-works">
-            <label>الصورة</label>
-            <input type="file" id="works-file" accept="image/*" required />
-            <img id="works-preview" alt="معاينة" />
+        <!-- تبويب آخر الأعمال -->
+        <div class="panel active" id="panel-works">
+          <div class="card">
+            <h3 id="works-form-title">إضافة عمل جديد</h3>
+            <form id="form-works">
+              <label>الصورة</label>
+              <input type="file" id="works-file" accept="image/*" required />
+              <img id="works-preview" alt="معاينة" />
 
-            <label>التصنيف</label>
-            <select id="works-category" required></select>
-            <small class="hint">لإضافة تصنيف جديد، روح لتبويب "التصنيفات"</small>
+              <label>الصور الفرعية (اختياري — تقدر تضيف أي عدد)</label>
+              <input type="file" id="works-sub-files" accept="image/*" multiple />
+              <div id="works-sub-preview" class="multi-preview"></div>
 
-            <label>الوصف الأساسي</label>
-            <input type="text" id="works-main" placeholder="مثال: جلسة تصوير زفاف" required />
+              <label>التصنيف</label>
+              <select id="works-category" required></select>
+              <small class="hint">لإضافة تصنيف جديد، روح لتبويب "التصنيفات"</small>
 
-            <label>الوصف الفرعي</label>
-            <textarea id="works-sub" rows="2" placeholder="تفاصيل إضافية عن الصورة"></textarea>
+              <label>الوصف الأساسي</label>
+              <input type="text" id="works-main" placeholder="مثال: جلسة تصوير زفاف" required />
 
-            <div class="upload-status" id="works-upload-status"></div>
+              <label>الوصف الفرعي</label>
+              <textarea id="works-sub" rows="2" placeholder="تفاصيل إضافية عن الصورة"></textarea>
 
-            <div class="btn-row">
-              <button type="submit" class="primary" id="works-submit-btn">إضافة العمل</button>
-              <button type="button" class="ghost" id="works-cancel-btn" style="display: none">إلغاء التعديل</button>
-            </div>
-          </form>
+              <div class="upload-status" id="works-upload-status"></div>
+
+              <div class="btn-row">
+                <button type="submit" class="primary" id="works-submit-btn">إضافة العمل</button>
+                <button type="button" class="ghost" id="works-cancel-btn" style="display: none">إلغاء التعديل</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>الأعمال المضافة</h3>
+            <div id="works-list"><p class="empty-msg">جاري التحميل...</p></div>
+          </div>
         </div>
 
-        <div class="card">
-          <h3>الأعمال المضافة</h3>
-          <div id="works-list"><p class="empty-msg">جاري التحميل...</p></div>
-        </div>
-      </div>
+        <!-- تبويب آخر الأخبار -->
+        <div class="panel" id="panel-news">
+          <div class="card">
+            <h3 id="news-form-title">إضافة خبر جديد</h3>
+            <form id="form-news">
+              <label>الصورة الرئيسية (اختياري — صورة وحدة بس)</label>
+              <input type="file" id="news-main-file" accept="image/*" />
+              <div id="news-main-preview-wrap"></div>
 
-      <!-- تبويب آخر الأخبار -->
-      <div class="panel" id="panel-news">
-        <div class="card">
-          <h3 id="news-form-title">إضافة خبر جديد</h3>
-          <form id="form-news">
-            <label>الصورة الرئيسية (اختياري — صورة وحدة بس)</label>
-            <input type="file" id="news-main-file" accept="image/*" />
-            <div id="news-main-preview-wrap"></div>
+              <label>الصور الفرعية (اختياري — تقدر تضيف أي عدد)</label>
+              <input type="file" id="news-sub-files" accept="image/*" multiple />
+              <div id="news-sub-preview" class="multi-preview"></div>
 
-            <label>الصور الفرعية (اختياري — تقدر تضيف أي عدد)</label>
-            <input type="file" id="news-sub-files" accept="image/*" multiple />
-            <div id="news-sub-preview" class="multi-preview"></div>
+              <div class="upload-status" id="news-upload-status"></div>
 
-            <div class="upload-status" id="news-upload-status"></div>
+              <label>الوصف الأساسي (اختياري)</label>
+              <input type="text" id="news-main" placeholder="عنوان الخبر" />
 
-            <label>الوصف الأساسي (اختياري)</label>
-            <input type="text" id="news-main" placeholder="عنوان الخبر" />
+              <label>الوصف الفرعي (اختياري)</label>
+              <textarea id="news-sub" rows="2" placeholder="تفاصيل إضافية"></textarea>
 
-            <label>الوصف الفرعي (اختياري)</label>
-            <textarea id="news-sub" rows="2" placeholder="تفاصيل إضافية"></textarea>
+              <div class="btn-row">
+                <button type="submit" class="primary" id="news-submit-btn">نشر الخبر</button>
+                <button type="button" class="ghost" id="news-cancel-btn" style="display: none">إلغاء التعديل</button>
+              </div>
+            </form>
+          </div>
 
-            <div class="btn-row">
-              <button type="submit" class="primary" id="news-submit-btn">نشر الخبر</button>
-              <button type="button" class="ghost" id="news-cancel-btn" style="display: none">إلغاء التعديل</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="card">
-          <h3>الأخبار المنشورة</h3>
-          <div id="news-list"><p class="empty-msg">جاري التحميل...</p></div>
-        </div>
-      </div>
-
-      <!-- تبويب التصنيفات -->
-      <div class="panel" id="panel-categories">
-        <div class="card">
-          <h3 id="category-form-title">إضافة تصنيف جديد</h3>
-          <form id="form-category">
-            <label>اسم التصنيف</label>
-            <input type="text" id="category-name-input" placeholder="مثال: تصوير زفاف" required />
-            <div class="btn-row">
-              <button type="submit" class="primary" id="category-save-btn">إضافة تصنيف</button>
-              <button type="button" class="ghost" id="category-cancel-btn" style="display: none">إلغاء التعديل</button>
-            </div>
-          </form>
+          <div class="card">
+            <h3>الأخبار المنشورة</h3>
+            <div id="news-list"><p class="empty-msg">جاري التحميل...</p></div>
+          </div>
         </div>
 
-        <div class="card">
-          <h3>التصنيفات الحالية</h3>
-          <div id="categories-list"><p class="empty-msg">جاري التحميل...</p></div>
-        </div>
-      </div>
+        <!-- تبويب التصنيفات -->
+        <div class="panel" id="panel-categories">
+          <div class="card">
+            <h3 id="category-form-title">إضافة تصنيف جديد</h3>
+            <form id="form-category">
+              <label>اسم التصنيف</label>
+              <input type="text" id="category-name-input" placeholder="مثال: تصوير زفاف" required />
+              <div class="btn-row">
+                <button type="submit" class="primary" id="category-save-btn">إضافة تصنيف</button>
+                <button type="button" class="ghost" id="category-cancel-btn" style="display: none">
+                  إلغاء التعديل
+                </button>
+              </div>
+            </form>
+          </div>
 
-      <!-- تبويب الإحصائيات -->
-      <div class="panel" id="panel-statistics">
-        <div class="card">
-          <h3 id="statistics-form-title">إضافة إحصائية جديدة</h3>
-          <form id="form-statistics">
-            <label>الاسم</label>
-            <input type="text" id="statistics-title" placeholder="مثال: عميل سعيد" required />
-
-            <label>الرقم</label>
-            <input type="number" id="statistics-value" placeholder="مثال: 250" step="any" required />
-
-            <label>اللاحقة</label>
-            <select id="statistics-suffix">
-              <option value="">بدون</option>
-              <option value="+">+ (علامة زائد)</option>
-              <option value="%">% (نسبة مئوية)</option>
-            </select>
-
-            <div class="upload-status" id="statistics-status"></div>
-
-            <div class="btn-row">
-              <button type="submit" class="primary" id="statistics-submit-btn">إضافة الإحصائية</button>
-              <button type="button" class="ghost" id="statistics-cancel-btn" style="display: none">
-                إلغاء التعديل
-              </button>
-            </div>
-          </form>
+          <div class="card">
+            <h3>التصنيفات الحالية</h3>
+            <div id="categories-list"><p class="empty-msg">جاري التحميل...</p></div>
+          </div>
         </div>
 
-        <div class="card">
-          <h3>الإحصائيات المضافة</h3>
-          <div id="statistics-list"><p class="empty-msg">جاري التحميل...</p></div>
+        <!-- تبويب الإحصائيات -->
+        <div class="panel" id="panel-statistics">
+          <div class="card">
+            <h3 id="statistics-form-title">إضافة إحصائية جديدة</h3>
+            <form id="form-statistics">
+              <label>الاسم</label>
+              <input type="text" id="statistics-title" placeholder="مثال: عميل سعيد" required />
+
+              <label>الرقم</label>
+              <input type="number" id="statistics-value" placeholder="مثال: 250" step="any" required />
+
+              <label>اللاحقة</label>
+              <select id="statistics-suffix">
+                <option value="">بدون</option>
+                <option value="+">+ (علامة زائد)</option>
+                <option value="%">% (نسبة مئوية)</option>
+              </select>
+
+              <div class="upload-status" id="statistics-status"></div>
+
+              <div class="btn-row">
+                <button type="submit" class="primary" id="statistics-submit-btn">إضافة الإحصائية</button>
+                <button type="button" class="ghost" id="statistics-cancel-btn" style="display: none">
+                  إلغاء التعديل
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>الإحصائيات المضافة</h3>
+            <div id="statistics-list"><p class="empty-msg">جاري التحميل...</p></div>
+          </div>
         </div>
-      </div>
       </div>
 
       <!-- الشريط السفلي: التنقل بين الأقسام (بالضغط أو بالسحب يمين/يسار) -->
@@ -207,7 +213,9 @@
         </button>
         <button class="tab-btn" data-tab="categories">
           <svg viewBox="0 0 24 24">
-            <path d="M20 12.6 12.6 20a1 1 0 0 1-1.4 0L4 12.8V5a1 1 0 0 1 1-1h7.8a1 1 0 0 1 .7.3L20 11a1 1 0 0 1 0 1.6z" />
+            <path
+              d="M20 12.6 12.6 20a1 1 0 0 1-1.4 0L4 12.8V5a1 1 0 0 1 1-1h7.8a1 1 0 0 1 .7.3L20 11a1 1 0 0 1 0 1.6z"
+            />
             <circle cx="8.3" cy="8.3" r="1.3" />
           </svg>
           <span>التصنيفات</span>
